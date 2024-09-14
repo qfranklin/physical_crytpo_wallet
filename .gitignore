@@ -1,1 +1,4 @@
 config.py
+qr_code.stl
+
+__pycache__/
