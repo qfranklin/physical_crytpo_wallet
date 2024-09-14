@@ -1,0 +1,12 @@
+public_key = '1234567890abc'
+private_key = '1234567890abc'
+
+# Parameters
+base_thickness = 0.8  # Thickness of the baseplate in mm
+qr_thickness = 0.4  # Thickness of the QR code extrusion in mm
+desired_size = 70.0  # Desired width and height of the QR code and baseplate in mm
+box_size = 1.0  # Size of each box in the QR code (adjust this if needed)
+grid_data = [public_key]  # List of strings for QR codes
+space_between_qrs = 5.0  # Space between QR codes in mm
+corner_radius = 10.0  # Radius for rounding the baseplate corners
+quiet_space = 4
