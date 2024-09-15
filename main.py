@@ -173,22 +173,36 @@ def main():
             for x in range(text_image.width):
                 if text_pixels[x, y] < 128:  # Black pixels
                     z = config.base_thickness + text_z_height
-                else:
-                    z = config.base_thickness
-                    continue
 
-                text_idx = len(vertices)
-                vertices.extend([
-                    [text_x_offset + x * x_scale, y_offset + height * y_scale + config.base_extension + y * y_scale, z],
-                    [text_x_offset + (x + 1) * x_scale, y_offset + height * y_scale + config.base_extension + y * y_scale, z],
-                    [text_x_offset + (x + 1) * x_scale, y_offset + height * y_scale + config.base_extension + (y + 1) * y_scale, z],
-                    [text_x_offset + x * x_scale, y_offset + height * y_scale + config.base_extension + (y + 1) * y_scale, z]
-                ])
-                
-                faces.extend([
-                    [text_idx, text_idx + 1, text_idx + 2], 
-                    [text_idx, text_idx + 2, text_idx + 3]
-                ])
+                    # Define vertices for the current pixel
+                    text_idx = len(vertices)                    
+                    
+                    vertices.extend([
+                        [text_x_offset + x * x_scale, y_offset + y * y_scale, z],
+                        [text_x_offset + (x + 1) * x_scale, y_offset + y * y_scale, z],
+                        [text_x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, z],
+                        [text_x_offset + x * x_scale, y_offset + (y + 1) * y_scale, z],
+                        [text_x_offset + x * x_scale, y_offset + y * y_scale, config.base_thickness],
+                        [text_x_offset + (x + 1) * x_scale, y_offset + y * y_scale, config.base_thickness],
+                        [text_x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness],
+                        [text_x_offset + x * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness]
+                    ])
+                    
+                    # Define faces for the current pixel
+                    faces.extend([
+                        # Top face
+                        [text_idx, text_idx + 1, text_idx + 2],
+                        [text_idx, text_idx + 2, text_idx + 3],
+                        # Side faces
+                        [text_idx, text_idx + 1, text_idx + 5],
+                        [text_idx, text_idx + 5, text_idx + 4],
+                        [text_idx + 1, text_idx + 2, text_idx + 6],
+                        [text_idx + 1, text_idx + 6, text_idx + 5],
+                        [text_idx + 2, text_idx + 3, text_idx + 7],
+                        [text_idx + 2, text_idx + 7, text_idx + 6],
+                        [text_idx + 3, text_idx, text_idx + 4],
+                        [text_idx + 3, text_idx + 4, text_idx + 7]
+                    ])
 
         # Append to overall vertices and faces list
         current_vertex_offset = len(all_vertices)
