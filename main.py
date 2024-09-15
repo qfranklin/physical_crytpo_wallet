@@ -53,6 +53,8 @@ def main():
         x_offset = col * (config.desired_size + config.space_between_qrs)
         y_offset = row * (config.desired_size + config.space_between_qrs)
 
+        x_offset += (config.base_extension * col)
+
         # Generate QR Code
         qr = qrcode.QRCode(
             version=1,
@@ -67,11 +69,6 @@ def main():
         img = qr.make_image(fill='black', back_color='white')
         img = img.convert('L')  # Convert to grayscale
         pixels = np.array(img)  # Get pixel data as a numpy array
-
-        # Generate QR code mesh for the current data
-        # vertices, faces = generate_qr_code_mesh(pixels, x_offset, y_offset)
-
-
         
         height, width = pixels.shape
 
@@ -87,12 +84,12 @@ def main():
         # Add baseplate vertices and faces
         vertices.extend([
             [x_offset, y_offset, 0],
-            [x_offset + width * x_scale, y_offset, 0],
-            [x_offset + width * x_scale, y_offset + height * y_scale, 0],
+            [x_offset + width * x_scale + config.base_extension, y_offset, 0],
+            [x_offset + width * x_scale + config.base_extension, y_offset + height * y_scale, 0],
             [x_offset, y_offset + height * y_scale, 0],
             [x_offset, y_offset, config.base_thickness],
-            [x_offset + width * x_scale, y_offset, config.base_thickness],
-            [x_offset + width * x_scale, y_offset + height * y_scale, config.base_thickness],
+            [x_offset + width * x_scale + config.base_extension, y_offset, config.base_thickness],
+            [x_offset + width * x_scale + config.base_extension, y_offset + height * y_scale, config.base_thickness],
             [x_offset, y_offset + height * y_scale, config.base_thickness]
         ])
         faces.extend([
