@@ -21,16 +21,15 @@ else:
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 
-try:
-    import bpy  # Blender's Python module
-    is_blender_env = True
-except ImportError:
-    is_blender_env = False
-
 import config
 
-
-print(f"Blender: {is_blender_env}")
+try:
+    import bpy  
+    import importlib
+    is_blender_env = True
+    importlib.reload(config) # Cache bust Blender
+except ImportError:
+    is_blender_env = False
 
 
 from os import system; 
@@ -158,12 +157,7 @@ def main():
     # Save as STL
     qr_mesh.save(rf'{config.current_directory}qr_code.stl')
 
-    print("executed 1")
-
     if is_blender_env:
-
-
-        print("executed")
 
         # Path to your STL file
         stl_file_path = config.current_directory + "qr_code.stl"
@@ -182,8 +176,6 @@ def main():
         camera = bpy.data.objects['Camera']
         camera.rotation_euler = (1.1, 0, 0)  # Adjust the rotation as needed
         bpy.context.scene.camera = camera
-
-print(__name__ == "__main__")
 
 if __name__ == "__main__":
     main()
