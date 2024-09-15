@@ -36,76 +36,6 @@ from os import system;
 cls = lambda: system('cls'); 
 cls()
 
-def generate_qr_code_mesh(pixels, x_offset, y_offset):
-    
-    height, width = pixels.shape
-
-    # Calculate scaling factors
-    x_scale = config.desired_size / width
-    y_scale = config.desired_size / height
-    z_scale = config.qr_thickness  # Extrusion height
-
-    # Prepare vertices and faces for STL
-    vertices = []
-    faces = []
-
-    # Define baseplate vertices with offset included
-    base_vertices = [
-        [x_offset, y_offset, 0],
-        [x_offset + width * x_scale, y_offset, 0],
-        [x_offset + width * x_scale, y_offset + height * y_scale, 0],
-        [x_offset, y_offset + height * y_scale, 0],
-        [x_offset, y_offset, config.base_thickness],
-        [x_offset + width * x_scale, y_offset, config.base_thickness],
-        [x_offset + width * x_scale, y_offset + height * y_scale, config.base_thickness],
-        [x_offset, y_offset + height * y_scale, config.base_thickness]
-    ]
-
-    idx = len(vertices)
-    
-    # Add baseplate vertices and faces
-    vertices.extend(base_vertices)
-    faces.extend([
-        [0, idx + 1, idx + 2], [0, idx + 2, idx + 3], 
-        [idx + 4, idx + 5, idx + 6], [idx + 4, idx + 6, idx + 7],
-        [0, idx + 1, idx + 5], [0, idx + 5, idx + 4],
-        [idx + 1, idx + 2, idx + 6], [idx + 1, idx + 6, idx + 5],
-        [idx + 2, idx + 3, idx + 7], [idx + 2, idx + 7, idx + 6],
-        [idx + 3, 0, idx + 4], [idx + 3, idx + 4, idx + 7]
-    ])
-
-    # Define QR code vertices and faces for each pixel
-    for y in range(height):
-        for x in range(width):
-            if pixels[y, x] < 128:  # Black pixels only (for QR code)
-                z = z_scale  # Set height for black pixels
-            else:
-                z = 0  # Set flat for white pixels
-
-            idx = len(vertices)
-
-            vertices.extend([
-                [x * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness],
-                [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness],
-                [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness],
-                [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness],
-                [x * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness + z],
-                [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness + z],
-                [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness + z],
-                [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness + z]
-            ])
-
-            # Create faces for the cube (6 faces per cube)
-            faces.extend([
-                [idx, idx + 1, idx + 5], [idx, idx + 5, idx + 4],
-                [idx + 1, idx + 2, idx + 6], [idx + 1, idx + 6, idx + 5],
-                [idx + 2, idx + 3, idx + 7], [idx + 2, idx + 7, idx + 6],
-                [idx + 3, idx, idx + 4], [idx + 3, idx + 4, idx + 7],
-                [idx + 4, idx + 5, idx + 6], [idx + 4, idx + 6, idx + 7]
-            ])
-
-    return vertices, faces
-
 def main():
     # Initialize overall vertices and faces for all QR codes
     all_vertices = []
@@ -139,7 +69,70 @@ def main():
         pixels = np.array(img)  # Get pixel data as a numpy array
 
         # Generate QR code mesh for the current data
-        vertices, faces = generate_qr_code_mesh(pixels, x_offset, y_offset)
+        # vertices, faces = generate_qr_code_mesh(pixels, x_offset, y_offset)
+
+
+        
+        height, width = pixels.shape
+
+        # Calculate scaling factors
+        x_scale = config.desired_size / width
+        y_scale = config.desired_size / height
+        z_scale = config.qr_thickness  # Extrusion height
+
+        # Prepare vertices and faces for STL
+        vertices = []
+        faces = []
+
+        # Add baseplate vertices and faces
+        vertices.extend([
+            [x_offset, y_offset, 0],
+            [x_offset + width * x_scale, y_offset, 0],
+            [x_offset + width * x_scale, y_offset + height * y_scale, 0],
+            [x_offset, y_offset + height * y_scale, 0],
+            [x_offset, y_offset, config.base_thickness],
+            [x_offset + width * x_scale, y_offset, config.base_thickness],
+            [x_offset + width * x_scale, y_offset + height * y_scale, config.base_thickness],
+            [x_offset, y_offset + height * y_scale, config.base_thickness]
+        ])
+        faces.extend([
+            [0, 1, 2], [0, 2, 3],  # Bottom face
+            [4, 5, 6], [4, 6, 7],  # Top face
+            [0, 1, 5], [0, 5, 4],  # Side faces
+            [1, 2, 6], [1, 6, 5],
+            [2, 3, 7], [2, 7, 6],
+            [3, 0, 4], [3, 4, 7]
+        ])
+
+        # Define QR code vertices and faces for each pixel
+        for y in range(height):
+            for x in range(width):
+                if pixels[y, x] < 128:  # Black pixels only (for QR code)
+                    z = z_scale  # Set height for black pixels
+                else:
+                    z = 0  # Set flat for white pixels
+
+                idx = len(vertices)
+
+                vertices.extend([
+                    [x * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness],
+                    [x * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness + z],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness + z],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness + z],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness + z]
+                ])
+
+                # Create faces for the cube (6 faces per cube)
+                faces.extend([
+                    [idx, idx + 1, idx + 5], [idx, idx + 5, idx + 4],
+                    [idx + 1, idx + 2, idx + 6], [idx + 1, idx + 6, idx + 5],
+                    [idx + 2, idx + 3, idx + 7], [idx + 2, idx + 7, idx + 6],
+                    [idx + 3, idx, idx + 4], [idx + 3, idx + 4, idx + 7],
+                    [idx + 4, idx + 5, idx + 6], [idx + 4, idx + 6, idx + 7]
+                ])
 
         # Append to overall vertices and faces list
         current_vertex_offset = len(all_vertices)
