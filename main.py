@@ -1,7 +1,7 @@
 import qrcode
 import numpy as np
 from stl import mesh
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import math
 
 import sys
@@ -81,6 +81,7 @@ def main():
         vertices = []
         faces = []
 
+        #'''
         # Add baseplate vertices and faces
         vertices.extend([
             [x_offset, y_offset, 0],
@@ -109,7 +110,7 @@ def main():
                 else:
                     z = 0  # Set flat for white pixels
 
-                idx = len(vertices)
+                qr_idx = len(vertices)
 
                 vertices.extend([
                     [x * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness],
@@ -124,11 +125,69 @@ def main():
 
                 # Create faces for the cube (6 faces per cube)
                 faces.extend([
-                    [idx, idx + 1, idx + 5], [idx, idx + 5, idx + 4],
-                    [idx + 1, idx + 2, idx + 6], [idx + 1, idx + 6, idx + 5],
-                    [idx + 2, idx + 3, idx + 7], [idx + 2, idx + 7, idx + 6],
-                    [idx + 3, idx, idx + 4], [idx + 3, idx + 4, idx + 7],
-                    [idx + 4, idx + 5, idx + 6], [idx + 4, idx + 6, idx + 7]
+                    [qr_idx, qr_idx + 1, qr_idx + 5], [qr_idx, qr_idx + 5, qr_idx + 4],
+                    [qr_idx + 1, qr_idx + 2, qr_idx + 6], [qr_idx + 1, qr_idx + 6, qr_idx + 5],
+                    [qr_idx + 2, qr_idx + 3, qr_idx + 7], [qr_idx + 2, qr_idx + 7, qr_idx + 6],
+                    [qr_idx + 3, qr_idx, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7],
+                    [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7]
+                ])
+        #'''
+
+
+        # Example usage:
+        font_path = config.current_directory + "text_font.ttf"  # Provide path to your font file
+
+        print(f"{height} {width}")
+
+        #'''
+
+        config_width = 200
+        config_height = 50
+
+        # Create an image for text
+        text_image = Image.new('L', (config_width, config_height), color=255)  # White background
+        text_draw = ImageDraw.Draw(text_image)
+        
+        # Load a font
+        font = ImageFont.truetype(font_path, config.font_size)
+        
+        # Get text bounding box (replaces textsize)
+        text_bbox = text_draw.textbbox((0, 0), config.text[idx], font=font)
+        text_width, text_height = text_bbox[2] - text_bbox[0], text_bbox[3] - text_bbox[1]
+        
+        # Position the text in the center
+        text_position = ((config_width - text_width) // 2, (config_height - text_height) // 2)
+        
+        # Draw the text onto the image
+        text_draw.text(text_position, config.text[idx], fill=0, font=font)  # Black text
+
+        text_image = ImageOps.mirror(text_image)
+        text_image = text_image.rotate(90, expand=True)
+
+        # Now convert this text image to 3D vertices (black pixels = protruding)
+        text_pixels = text_image.load()
+        text_z_height = 1.5  # Height of the protruding text
+        text_x_offset = x_offset  # Align with the baseplate
+
+        for y in range(text_image.height):
+            for x in range(text_image.width):
+                if text_pixels[x, y] < 128:  # Black pixels
+                    z = config.base_thickness + text_z_height
+                else:
+                    z = config.base_thickness
+                    continue
+
+                text_idx = len(vertices)
+                vertices.extend([
+                    [text_x_offset + x * x_scale, y_offset + height * y_scale + config.base_extension + y * y_scale, z],
+                    [text_x_offset + (x + 1) * x_scale, y_offset + height * y_scale + config.base_extension + y * y_scale, z],
+                    [text_x_offset + (x + 1) * x_scale, y_offset + height * y_scale + config.base_extension + (y + 1) * y_scale, z],
+                    [text_x_offset + x * x_scale, y_offset + height * y_scale + config.base_extension + (y + 1) * y_scale, z]
+                ])
+                
+                faces.extend([
+                    [text_idx, text_idx + 1, text_idx + 2], 
+                    [text_idx, text_idx + 2, text_idx + 3]
                 ])
 
         # Append to overall vertices and faces list
