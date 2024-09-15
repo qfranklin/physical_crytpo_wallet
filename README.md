@@ -31,3 +31,6 @@ This script generates 3D meshes from QR codes and saves them as STL files. It ca
    ```bash
    exec(open("path\\to\\qr_code_python\\main.py").read(), {'__file__': "path\\to\\qr_code_python\\main.py", '__name__': '__main__'})
    ```
+
+## Citation
+Text font obtained from https://www.fontspace.com/8-bit-font-f7996
