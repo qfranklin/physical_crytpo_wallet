@@ -36,21 +36,8 @@ from os import system;
 cls = lambda: system('cls'); 
 cls()
 
-def generate_qr_code_mesh(data, x_offset, y_offset):
-    # Generate QR Code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=config.box_size,
-        border=4,  # Border size in boxes
-    )
-    qr.add_data(data)
-    qr.make(fit=True)
-
-    # Save the QR code as an image (temp image in memory)
-    img = qr.make_image(fill='black', back_color='white')
-    img = img.convert('L')  # Convert to grayscale
-    pixels = np.array(img)  # Get pixel data as a numpy array
+def generate_qr_code_mesh(pixels, x_offset, y_offset):
+    
     height, width = pixels.shape
 
     # Calculate scaling factors
@@ -136,8 +123,23 @@ def main():
         x_offset = col * (config.desired_size + config.space_between_qrs)
         y_offset = row * (config.desired_size + config.space_between_qrs)
 
+        # Generate QR Code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=config.box_size,
+            border=4,  # Border size in boxes
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+
+        # Save the QR code as an image (temp image in memory)
+        img = qr.make_image(fill='black', back_color='white')
+        img = img.convert('L')  # Convert to grayscale
+        pixels = np.array(img)  # Get pixel data as a numpy array
+
         # Generate QR code mesh for the current data
-        vertices, faces = generate_qr_code_mesh(data, x_offset, y_offset)
+        vertices, faces = generate_qr_code_mesh(pixels, x_offset, y_offset)
 
         # Append to overall vertices and faces list
         current_vertex_offset = len(all_vertices)
