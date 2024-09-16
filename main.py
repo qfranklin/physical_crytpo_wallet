@@ -131,69 +131,53 @@ def main():
                     [qr_idx + 3, qr_idx, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7],
                     [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7]
                 ])
-        #'''
 
+        # Next section is for adding text to the bottom of the qr code. 
+        # This only works when creating a single qr code with short text.
+        # The size and position must be manually set.
 
-        # Example usage:
+        # Load the font file
         font_path = config.current_directory + "text_font.ttf"  # Provide path to your font file
-
-        print(f"{height} {width}")
-
-        #'''
-
-        config_width = 200
-        config_height = 50
-
-        # Create an image for text
-        text_image = Image.new('L', (config_width, config_height), color=255)  # White background
-        text_draw = ImageDraw.Draw(text_image)
-        
-        # Load a font
         font = ImageFont.truetype(font_path, config.font_size)
+
         
-        # Get text bounding box (replaces textsize)
-        text_bbox = text_draw.textbbox((0, 0), config.text[idx], font=font)
-        text_width, text_height = text_bbox[2] - text_bbox[0], text_bbox[3] - text_bbox[1]
-        
-        # Position the text in the center
-        text_position = ((config_width - text_width) // 2, (config_height - text_height) // 2)
-        
-        # Draw the text onto the image
-        text_draw.text(text_position, config.text[idx], fill=0, font=font)  # Black text
+        # Manually setting the size of the image. 
+        # Set the background color to white (255) so it can be skipped later in the for loop
+        text_image = Image.new('L', (110, 80), color=255)
+        text_draw = ImageDraw.Draw(text_image)
+
+        # Manually setting the position of the image. 
+        # This will set the text to black text
+        text_draw.text((1, 38), config.text, fill=0, font=font) 
 
         text_image = ImageOps.mirror(text_image)
         text_image = text_image.rotate(90, expand=True)
 
         # Now convert this text image to 3D vertices (black pixels = protruding)
         text_pixels = text_image.load()
-        text_z_height = 1.5  # Height of the protruding text
-        text_x_offset = x_offset  # Align with the baseplate
 
         for y in range(text_image.height):
             for x in range(text_image.width):
                 if text_pixels[x, y] < 128:  # Black pixels
-                    z = config.base_thickness + text_z_height
+                    z = config.base_thickness + config.qr_thickness
 
-                    # Define vertices for the current pixel
                     text_idx = len(vertices)                    
                     
                     vertices.extend([
-                        [text_x_offset + x * x_scale, y_offset + y * y_scale, z],
-                        [text_x_offset + (x + 1) * x_scale, y_offset + y * y_scale, z],
-                        [text_x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, z],
-                        [text_x_offset + x * x_scale, y_offset + (y + 1) * y_scale, z],
-                        [text_x_offset + x * x_scale, y_offset + y * y_scale, config.base_thickness],
-                        [text_x_offset + (x + 1) * x_scale, y_offset + y * y_scale, config.base_thickness],
-                        [text_x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness],
-                        [text_x_offset + x * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness]
+                        [x_offset + x * x_scale, y_offset + y * y_scale, z],
+                        [x_offset + (x + 1) * x_scale, y_offset + y * y_scale, z],
+                        [x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, z],
+                        [x_offset + x * x_scale, y_offset + (y + 1) * y_scale, z],
+                        [x_offset + x * x_scale, y_offset + y * y_scale, config.base_thickness],
+                        [x_offset + (x + 1) * x_scale, y_offset + y * y_scale, config.base_thickness],
+                        [x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness],
+                        [x_offset + x * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness]
                     ])
                     
                     # Define faces for the current pixel
                     faces.extend([
-                        # Top face
                         [text_idx, text_idx + 1, text_idx + 2],
                         [text_idx, text_idx + 2, text_idx + 3],
-                        # Side faces
                         [text_idx, text_idx + 1, text_idx + 5],
                         [text_idx, text_idx + 5, text_idx + 4],
                         [text_idx + 1, text_idx + 2, text_idx + 6],
@@ -204,7 +188,6 @@ def main():
                         [text_idx + 3, text_idx + 4, text_idx + 7]
                     ])
 
-        # Append to overall vertices and faces list
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
         all_faces.extend([[f[0] + current_vertex_offset, f[1] + current_vertex_offset, f[2] + current_vertex_offset] for f in faces])

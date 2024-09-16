@@ -12,3 +12,5 @@ corner_radius = 10.0  # Radius for rounding the baseplate corners
 quiet_space = 4
 
 base_extension = 10
+
+text = "9/16/24"
