@@ -143,17 +143,17 @@ def main():
 
         # Manually setting the size of the image.
         # Set the background color to white (255) so it can be skipped later in the for loop
-        text_image = Image.new('L', (35, 10 + config.desired_size), color=255)
+        text_image = Image.new('L', (500, 500), color=255)
         text_draw = ImageDraw.Draw(text_image)
 
         # Manually setting the position of the text on the image
-        text_draw.text((0, config.desired_size), config.text, fill=0, font=font)
+        text_draw.text((config.desired_size * idx, config.desired_size), config.text[idx], fill=0, font=font)
 
-        bbox = text_draw.textbbox((0, config.desired_size), config.text, font=font)
+        bbox = text_draw.textbbox((config.desired_size * idx, config.desired_size * (idx + 1)), config.text[idx], font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
 
-        print(f"{text_width} {text_height}")
+        print(f"{text_width} {text_height} {idx}")
 
         # Optional image transformations: mirror and rotate (depends on your use case)
         text_image = ImageOps.mirror(text_image)
