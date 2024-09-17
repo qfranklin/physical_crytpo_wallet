@@ -147,7 +147,7 @@ def main():
         text_draw = ImageDraw.Draw(text_image)
 
         # Manually setting the position of the text on the image
-        text_draw.text((config.desired_size * idx, config.desired_size), config.text[idx], fill=0, font=font)
+        text_draw.text(((config.desired_size * idx) + (config.space_between_qrs * idx) + 7, config.desired_size), config.text[idx], fill=0, font=font)
 
         bbox = text_draw.textbbox((config.desired_size * idx, config.desired_size * (idx + 1)), config.text[idx], font=font)
         text_width = bbox[2] - bbox[0]
