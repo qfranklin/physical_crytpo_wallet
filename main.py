@@ -48,8 +48,8 @@ def main():
     # Loop over the list of strings (grid_data)
     for idx, data in enumerate(config.grid_data):
         # Determine row and column position for each QR code
-        row = idx // grid_size
-        col = idx % grid_size
+        col = idx // grid_size
+        row = idx % grid_size
         x_offset = col * (config.desired_size + config.space_between_qrs)
         y_offset = row * (config.desired_size + config.space_between_qrs)
 
@@ -131,6 +131,7 @@ def main():
                     [qr_idx + 3, qr_idx, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7],
                     [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7]
                 ])
+        #'''
 
         # Next section is for adding text to the bottom of the qr code. 
         # This only works when creating a single qr code with short text.
@@ -140,46 +141,51 @@ def main():
         font_path = config.current_directory + "text_font.ttf"  # Provide path to your font file
         font = ImageFont.truetype(font_path, config.font_size)
 
-        
-        # Manually setting the size of the image. 
+        # Manually setting the size of the image.
         # Set the background color to white (255) so it can be skipped later in the for loop
-        text_image = Image.new('L', (110, 80), color=255)
+        text_image = Image.new('L', (500, 500), color=255)
         text_draw = ImageDraw.Draw(text_image)
 
-        # Manually setting the position of the image. 
-        # This will set the text to black text
-        text_draw.text((1, 38), config.text, fill=0, font=font) 
+        # Manually setting the position of the text on the image
+        text_draw.text(((config.desired_size * idx) + (config.space_between_qrs * idx) + 7, config.desired_size), config.text[idx], fill=0, font=font)
 
+        bbox = text_draw.textbbox((config.desired_size * idx, config.desired_size * (idx + 1)), config.text[idx], font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        print(f"{text_width} {text_height} {idx}")
+
+        # Optional image transformations: mirror and rotate (depends on your use case)
         text_image = ImageOps.mirror(text_image)
         text_image = text_image.rotate(90, expand=True)
 
-        # Now convert this text image to 3D vertices (black pixels = protruding)
+        # Convert this text image to 3D vertices (black pixels = protruding)
         text_pixels = text_image.load()
 
+        # Loop through the pixels in the text image and generate vertices
         for y in range(text_image.height):
             for x in range(text_image.width):
-                if text_pixels[x, y] < 128:  # Black pixels
-                    z = config.base_thickness + config.qr_thickness
+                if text_pixels[x, y] < 128:  # Black pixels = protruding areas
+                    text_idx = len(vertices)
 
-                    text_idx = len(vertices)                    
-                    
+                    # Create vertices without the QR code offset, apply your own scaling instead
                     vertices.extend([
-                        [x_offset + x * x_scale, y_offset + y * y_scale, z],
-                        [x_offset + (x + 1) * x_scale, y_offset + y * y_scale, z],
-                        [x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, z],
-                        [x_offset + x * x_scale, y_offset + (y + 1) * y_scale, z],
-                        [x_offset + x * x_scale, y_offset + y * y_scale, config.base_thickness],
-                        [x_offset + (x + 1) * x_scale, y_offset + y * y_scale, config.base_thickness],
-                        [x_offset + (x + 1) * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness],
-                        [x_offset + x * x_scale, y_offset + (y + 1) * y_scale, config.base_thickness]
+                        [x, y, config.base_thickness + config.qr_thickness],  # Top-left
+                        [(x + 1), y, config.base_thickness + config.qr_thickness],  # Top-right
+                        [(x + 1), (y + 1), config.base_thickness + config.qr_thickness],  # Bottom-right
+                        [x, (y + 1), config.base_thickness + config.qr_thickness],  # Bottom-left
+                        [x, y, config.base_thickness],  # Base top-left
+                        [(x + 1), y, config.base_thickness],  # Base top-right
+                        [(x + 1), (y + 1), config.base_thickness],  # Base bottom-right
+                        [x, (y + 1), config.base_thickness]  # Base bottom-left
                     ])
-                    
-                    # Define faces for the current pixel
+
+                    # Define faces for each pixel (each square face consists of two triangles)
                     faces.extend([
                         [text_idx, text_idx + 1, text_idx + 2],
                         [text_idx, text_idx + 2, text_idx + 3],
                         [text_idx, text_idx + 1, text_idx + 5],
-                        [text_idx, text_idx + 5, text_idx + 4],
+                        [text_idx + 5, text_idx + 4, text_idx],
                         [text_idx + 1, text_idx + 2, text_idx + 6],
                         [text_idx + 1, text_idx + 6, text_idx + 5],
                         [text_idx + 2, text_idx + 3, text_idx + 7],
@@ -187,6 +193,7 @@ def main():
                         [text_idx + 3, text_idx, text_idx + 4],
                         [text_idx + 3, text_idx + 4, text_idx + 7]
                     ])
+
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
