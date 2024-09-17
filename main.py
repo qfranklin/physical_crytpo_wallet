@@ -48,8 +48,8 @@ def main():
     # Loop over the list of strings (grid_data)
     for idx, data in enumerate(config.grid_data):
         # Determine row and column position for each QR code
-        row = idx // grid_size
-        col = idx % grid_size
+        col = idx // grid_size
+        row = idx % grid_size
         x_offset = col * (config.desired_size + config.space_between_qrs)
         y_offset = row * (config.desired_size + config.space_between_qrs)
 
