@@ -134,26 +134,33 @@ def main():
         #'''
 
         # Next section is for adding text to the bottom of the qr code. 
-        # This only works when creating a single qr code with short text.
-        # The size and position must be manually set.
 
-        # Load the font file
-        font_path = config.current_directory + "text_font.ttf"  # Provide path to your font file
-        font = ImageFont.truetype(font_path, config.font_size)
+        # Scale the text up, then downsize. This prevents loss of resolution.
+        text_scale_factor = 2
+        large_font = ImageFont.truetype("arial.ttf", config.font_size * text_scale_factor)
+        dummy_image = Image.new('L', (1, 1), color=255)
+        dummy_draw = ImageDraw.Draw(dummy_image)
+        bbox = dummy_draw.textbbox((0, 0), config.text[idx], font=large_font)
+        text_width = 5000 #bbox[2] - bbox[0]
+        text_height = 5000 #bbox[3] - bbox[1]
+        large_text_image = Image.new('L', (text_width, text_height), color=255)
+        
+        text_draw = ImageDraw.Draw(large_text_image)
 
-        # Manually setting the size of the image.
-        # Set the background color to white (255) so it can be skipped later in the for loop
-        text_image = Image.new('L', (500, 500), color=255)
-        text_draw = ImageDraw.Draw(text_image)
+        text_x_position = (config.desired_size * idx) + (config.space_between_qrs * idx) + 7 #-bbox[0] #(config.desired_size * idx) + (config.space_between_qrs * idx) + 7
+        text_y_position = config.desired_size #-bbox[1] #config.desired_size
 
-        # Manually setting the position of the text on the image
-        text_draw.text(((config.desired_size * idx) + (config.space_between_qrs * idx) + 7, config.desired_size), config.text[idx], fill=0, font=font)
+        # Draw the text on the new larger image
+        text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=large_font)
 
-        bbox = text_draw.textbbox((config.desired_size * idx, config.desired_size * (idx + 1)), config.text[idx], font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
+        # Step 3: Resize the image down to the desired final size
+        # The text image is created larger, so now we reduce the size for better resolution.
+        text_image = large_text_image.resize(
+            (text_width // text_scale_factor, text_height // text_scale_factor),
+            Image.Resampling.LANCZOS
+        )
 
-        print(f"{text_width} {text_height} {idx}")
+        print(f"{text_width} {text_height} {text_x_position} {text_y_position} {idx}")
 
         # Optional image transformations: mirror and rotate (depends on your use case)
         text_image = ImageOps.mirror(text_image)
