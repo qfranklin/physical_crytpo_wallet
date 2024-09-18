@@ -82,6 +82,8 @@ def main():
         y_scale = desired_size / height
         z_scale = qr_thickness  # Extrusion height
 
+        print(f"{height} {width} {desired_size} {x_scale} {y_scale}")
+
         # Prepare vertices and faces for STL
         vertices = []
         faces = []
@@ -90,12 +92,12 @@ def main():
         # Add baseplate vertices and faces
         vertices.extend([
             [x_offset, y_offset, 0],
-            [x_offset + width * x_scale + base_extension, y_offset, 0],
-            [x_offset + width * x_scale + base_extension, y_offset + height * y_scale, 0],
+            [x_offset + width * x_scale, y_offset, 0],
+            [x_offset + width * x_scale, y_offset + height * y_scale, 0],
             [x_offset, y_offset + height * y_scale, 0],
             [x_offset, y_offset, base_thickness],
-            [x_offset + width * x_scale + base_extension, y_offset, base_thickness],
-            [x_offset + width * x_scale + base_extension, y_offset + height * y_scale, base_thickness],
+            [x_offset + width * x_scale, y_offset, base_thickness],
+            [x_offset + width * x_scale, y_offset + height * y_scale, base_thickness],
             [x_offset, y_offset + height * y_scale, base_thickness]
         ])
         faces.extend([
@@ -137,6 +139,33 @@ def main():
                     [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7]
                 ])
         #'''
+
+        # Add the base extension
+        for y in range(int(desired_size / x_scale)):
+            for x in range(int(base_extension / y_scale)):
+
+                qr_idx = len(vertices)
+
+                vertices.extend([
+                    [x * x_scale + desired_size, y * y_scale + y_offset, 0],
+                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                    [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness]
+                ])
+
+                # Create faces for the cube (6 faces per cube)
+                faces.extend([
+                    [qr_idx, qr_idx + 1, qr_idx + 2], [qr_idx, qr_idx + 2, qr_idx + 3],  # Top face
+                    [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7],  # Bottom face
+                    [qr_idx, qr_idx + 1, qr_idx + 5], [qr_idx, qr_idx + 5, qr_idx + 4],  # Front face
+                    [qr_idx + 2, qr_idx + 3, qr_idx + 7], [qr_idx + 2, qr_idx + 7, qr_idx + 6],  # Back face
+                    [qr_idx + 1, qr_idx + 2, qr_idx + 6], [qr_idx + 1, qr_idx + 6, qr_idx + 5],  # Right face
+                    [qr_idx + 3, qr_idx + 0, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7]   # Left face
+                ])
 
         # Next section is for adding text to the bottom of the qr code. 
 
