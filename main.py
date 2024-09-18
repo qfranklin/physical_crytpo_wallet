@@ -3,11 +3,8 @@ import numpy as np
 from stl import mesh
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import math
-
 import sys
 import os
-
-
 
 if '__file__' in globals():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -40,7 +37,7 @@ def main():
 
     ## These are in milimeters
     desired_size = 45 
-    qr_thickness = 0.28
+    qr_thickness = 0.56
     base_thickness = 0.84
     base_extension = 15
     space_between_qrs = 5
@@ -147,11 +144,9 @@ def main():
         text_scale_factor = 2
         font_size = 11
         large_font = ImageFont.truetype("arial.ttf", font_size * text_scale_factor)
-        #dummy_image = Image.new('L', (1, 1), color=255)
-        #dummy_draw = ImageDraw.Draw(dummy_image)
-        #bbox = dummy_draw.textbbox((0, 0), config.text[idx], font=large_font)
-        text_width = 500 #bbox[2] - bbox[0]
-        text_height = 500 #bbox[3] - bbox[1]
+
+        text_width = 500
+        text_height = 500
         large_text_image = Image.new('L', (text_width, text_height), color=255)
         
         text_draw = ImageDraw.Draw(large_text_image)
