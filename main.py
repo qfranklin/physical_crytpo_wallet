@@ -37,6 +37,13 @@ cls = lambda: system('cls');
 cls()
 
 def main():
+
+    desired_size = 45
+    qr_thickness = 0.56
+    base_thickness = 1.4
+    base_extension = 15
+    space_between_qrs = 5
+
     # Initialize overall vertices and faces for all QR codes
     all_vertices = []
     all_faces = []
@@ -50,17 +57,17 @@ def main():
         # Determine row and column position for each QR code
         col = idx // grid_size
         row = idx % grid_size
-        x_offset = col * (config.desired_size + config.space_between_qrs)
-        y_offset = row * (config.desired_size + config.space_between_qrs)
+        x_offset = col * (desired_size + space_between_qrs)
+        y_offset = row * (desired_size + space_between_qrs)
 
-        x_offset += (config.base_extension * col)
+        x_offset += (base_extension * col)
 
         # Generate QR Code
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=config.box_size,
-            border=4,  # Border size in boxes
+            box_size=1,
+            border=4,
         )
         qr.add_data(data)
         qr.make(fit=True)
@@ -73,9 +80,9 @@ def main():
         height, width = pixels.shape
 
         # Calculate scaling factors
-        x_scale = config.desired_size / width
-        y_scale = config.desired_size / height
-        z_scale = config.qr_thickness  # Extrusion height
+        x_scale = desired_size / width
+        y_scale = desired_size / height
+        z_scale = qr_thickness  # Extrusion height
 
         # Prepare vertices and faces for STL
         vertices = []
@@ -85,13 +92,13 @@ def main():
         # Add baseplate vertices and faces
         vertices.extend([
             [x_offset, y_offset, 0],
-            [x_offset + width * x_scale + config.base_extension, y_offset, 0],
-            [x_offset + width * x_scale + config.base_extension, y_offset + height * y_scale, 0],
+            [x_offset + width * x_scale + base_extension, y_offset, 0],
+            [x_offset + width * x_scale + base_extension, y_offset + height * y_scale, 0],
             [x_offset, y_offset + height * y_scale, 0],
-            [x_offset, y_offset, config.base_thickness],
-            [x_offset + width * x_scale + config.base_extension, y_offset, config.base_thickness],
-            [x_offset + width * x_scale + config.base_extension, y_offset + height * y_scale, config.base_thickness],
-            [x_offset, y_offset + height * y_scale, config.base_thickness]
+            [x_offset, y_offset, base_thickness],
+            [x_offset + width * x_scale + base_extension, y_offset, base_thickness],
+            [x_offset + width * x_scale + base_extension, y_offset + height * y_scale, base_thickness],
+            [x_offset, y_offset + height * y_scale, base_thickness]
         ])
         faces.extend([
             [0, 1, 2], [0, 2, 3],  # Bottom face
@@ -113,14 +120,14 @@ def main():
                 qr_idx = len(vertices)
 
                 vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness + z],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, config.base_thickness + z],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness + z],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, config.base_thickness + z]
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z]
                 ])
 
                 # Create faces for the cube (6 faces per cube)
@@ -137,7 +144,8 @@ def main():
 
         # Scale the text up, then downsize. This prevents loss of resolution.
         text_scale_factor = 2
-        large_font = ImageFont.truetype("arial.ttf", config.font_size * text_scale_factor)
+        font_size = 16
+        large_font = ImageFont.truetype("arial.ttf", font_size * text_scale_factor)
         dummy_image = Image.new('L', (1, 1), color=255)
         dummy_draw = ImageDraw.Draw(dummy_image)
         bbox = dummy_draw.textbbox((0, 0), config.text[idx], font=large_font)
@@ -147,8 +155,8 @@ def main():
         
         text_draw = ImageDraw.Draw(large_text_image)
 
-        text_x_position = (config.desired_size * idx) + (config.space_between_qrs * idx) + 7 #-bbox[0] #(config.desired_size * idx) + (config.space_between_qrs * idx) + 7
-        text_y_position = config.desired_size #-bbox[1] #config.desired_size
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 7 #-bbox[0] #(desired_size * idx) + (space_between_qrs * idx) + 7
+        text_y_position = desired_size #-bbox[1] #desired_size
 
         # Draw the text on the new larger image
         text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=large_font)
@@ -177,14 +185,14 @@ def main():
 
                     # Create vertices without the QR code offset, apply your own scaling instead
                     vertices.extend([
-                        [x, y, config.base_thickness + config.qr_thickness],  # Top-left
-                        [(x + 1), y, config.base_thickness + config.qr_thickness],  # Top-right
-                        [(x + 1), (y + 1), config.base_thickness + config.qr_thickness],  # Bottom-right
-                        [x, (y + 1), config.base_thickness + config.qr_thickness],  # Bottom-left
-                        [x, y, config.base_thickness],  # Base top-left
-                        [(x + 1), y, config.base_thickness],  # Base top-right
-                        [(x + 1), (y + 1), config.base_thickness],  # Base bottom-right
-                        [x, (y + 1), config.base_thickness]  # Base bottom-left
+                        [x, y, base_thickness + qr_thickness],  # Top-left
+                        [(x + 1), y, base_thickness + qr_thickness],  # Top-right
+                        [(x + 1), (y + 1), base_thickness + qr_thickness],  # Bottom-right
+                        [x, (y + 1), base_thickness + qr_thickness],  # Bottom-left
+                        [x, y, base_thickness],  # Base top-left
+                        [(x + 1), y, base_thickness],  # Base top-right
+                        [(x + 1), (y + 1), base_thickness],  # Base bottom-right
+                        [x, (y + 1), base_thickness]  # Base bottom-left
                     ])
 
                     # Define faces for each pixel (each square face consists of two triangles)
