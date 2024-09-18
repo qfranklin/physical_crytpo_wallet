@@ -143,20 +143,20 @@ def main():
         # Next section is for adding text to the bottom of the qr code. 
 
         # Scale the text up, then downsize. This prevents loss of resolution.
-        text_scale_factor = 2
-        font_size = 16
+        text_scale_factor = 4
+        font_size = 13
         large_font = ImageFont.truetype("arial.ttf", font_size * text_scale_factor)
-        dummy_image = Image.new('L', (1, 1), color=255)
-        dummy_draw = ImageDraw.Draw(dummy_image)
-        bbox = dummy_draw.textbbox((0, 0), config.text[idx], font=large_font)
-        text_width = 5000 #bbox[2] - bbox[0]
-        text_height = 5000 #bbox[3] - bbox[1]
+        #dummy_image = Image.new('L', (1, 1), color=255)
+        #dummy_draw = ImageDraw.Draw(dummy_image)
+        #bbox = dummy_draw.textbbox((0, 0), config.text[idx], font=large_font)
+        text_width = 500 #bbox[2] - bbox[0]
+        text_height = 500 #bbox[3] - bbox[1]
         large_text_image = Image.new('L', (text_width, text_height), color=255)
         
         text_draw = ImageDraw.Draw(large_text_image)
 
-        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 7 #-bbox[0] #(desired_size * idx) + (space_between_qrs * idx) + 7
-        text_y_position = desired_size #-bbox[1] #desired_size
+        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 1) * text_scale_factor #-bbox[0] #(desired_size * idx) + (space_between_qrs * idx) + 7
+        text_y_position = desired_size * text_scale_factor #-bbox[1] #desired_size
 
         # Draw the text on the new larger image
         text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=large_font)
@@ -168,7 +168,7 @@ def main():
             Image.Resampling.LANCZOS
         )
 
-        print(f"{text_width} {text_height} {text_x_position} {text_y_position} {idx}")
+        print(f"{text_x_position} {text_y_position}")
 
         # Optional image transformations: mirror and rotate (depends on your use case)
         text_image = ImageOps.mirror(text_image)
