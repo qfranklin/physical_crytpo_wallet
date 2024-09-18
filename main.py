@@ -140,9 +140,18 @@ def main():
                 ])
         #'''
 
+        adjacency_range = 9
+        base_extension_height = int(desired_size / x_scale)
+        base_extension_width = int(base_extension / y_scale)
+
         # Add the base extension
-        for y in range(int(desired_size / x_scale)):
-            for x in range(int(base_extension / y_scale)):
+        for y in range(base_extension_height):
+            for x in range(base_extension_width):
+
+                print(f"{width} {x} {y} {(width - 1 - x) + y}")
+
+                if ((base_extension_width - 1 - x) + (height - 1 - y)) < adjacency_range:
+                    continue
 
                 qr_idx = len(vertices)
 
@@ -192,8 +201,6 @@ def main():
             (text_width // text_scale_factor, text_height // text_scale_factor),
             Image.Resampling.LANCZOS
         )
-
-        print(f"{text_x_position} {text_y_position}")
 
         # Optional image transformations: mirror and rotate (depends on your use case)
         text_image = ImageOps.mirror(text_image)
