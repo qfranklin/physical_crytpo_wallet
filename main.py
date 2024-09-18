@@ -38,9 +38,10 @@ cls()
 
 def main():
 
-    desired_size = 45
-    qr_thickness = 0.56
-    base_thickness = 1.4
+    ## These are in milimeters
+    desired_size = 45 
+    qr_thickness = 0.28
+    base_thickness = 0.84
     base_extension = 15
     space_between_qrs = 5
 
@@ -143,8 +144,8 @@ def main():
         # Next section is for adding text to the bottom of the qr code. 
 
         # Scale the text up, then downsize. This prevents loss of resolution.
-        text_scale_factor = 4
-        font_size = 13
+        text_scale_factor = 2
+        font_size = 11
         large_font = ImageFont.truetype("arial.ttf", font_size * text_scale_factor)
         #dummy_image = Image.new('L', (1, 1), color=255)
         #dummy_draw = ImageDraw.Draw(dummy_image)
