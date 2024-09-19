@@ -65,7 +65,7 @@ def main():
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=1,
-            border=4,
+            border=5,
         )
         qr.add_data(data)
         qr.make(fit=True)
@@ -110,10 +110,12 @@ def main():
         # Define QR code vertices and faces for each pixel
         for y in range(height):
             for x in range(width):
-                if pixels[y, x] < 128:  # Black pixels only (for QR code)
+                if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:  # Black pixels only (for QR code)
                     z = z_scale  # Set height for black pixels
                 else:
                     z = 0  # Set flat for white pixels
+
+                print(f"{x} {y} {height} {width}")
 
                 qr_idx = len(vertices)
 
