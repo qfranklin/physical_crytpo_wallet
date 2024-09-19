@@ -146,17 +146,22 @@ def main():
         for y in range(base_extension_height):
             for x in range(base_extension_width):
 
-                if y == 0 or (x + 1) == base_extension_width or (y + 1) == base_extension_height or (((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range):
+                if y == 0 or \
+                  (x + 1) == base_extension_width or \
+                  (y + 1) == base_extension_height or \
+                  (((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range - 1) or \
+                  (((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range - 2):
                     z = z_scale
                 else:
                     z = 0
 
-                if ((base_extension_width - 1 - x) + (height - 1 - y)) < adjacency_range:
+                if ((base_extension_width - 1 - x) + (height - 1 - y)) < adjacency_range - 2:
                     continue
 
                 qr_idx = len(vertices)
 
-                if ((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range:
+                if ((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range or \
+                   ((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range - 2:
                     # This will make the edge cubes have a 45 degreee edge.
                     vertices.extend([
                         [x * x_scale + desired_size, y * y_scale + y_offset, 0],
@@ -167,6 +172,18 @@ def main():
                         [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
                         [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
                         [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
+                    ])
+                elif ((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range - 1:
+                    # This will make the edge cubes have a 45 degreee edge.
+                    vertices.extend([
+                        [x * x_scale + desired_size, y * y_scale + y_offset, 0],
+                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, 0],
+                        [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness + z],
+                        [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                     ])
                 else:
                     vertices.extend([
