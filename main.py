@@ -36,7 +36,7 @@ cls()
 def main():
 
     ## These are in milimeters
-    desired_size = 45 
+    desired_size = 51 
     qr_thickness = 0.56
     base_thickness = 0.84
     base_extension = 15
@@ -110,8 +110,10 @@ def main():
         # Define QR code vertices and faces for each pixel
         for y in range(height):
             for x in range(width):
-                if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:  # Black pixels only (for QR code)
+                if pixels[y, x] < 128:  # Black pixels only (for QR code)
                     z = z_scale  # Set height for black pixels
+                elif x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:
+                    z = z_scale / 2
                 else:
                     z = 0  # Set flat for white pixels
 
@@ -146,11 +148,12 @@ def main():
         for y in range(base_extension_height):
             for x in range(base_extension_width):
 
-                if y == 0 or \
-                  (x + 1) == base_extension_width or \
+                if y == 0:
+                    z = z_scale
+                elif (x + 1) == base_extension_width or \
                   (y + 1) == base_extension_height or \
                   (((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1):
-                    z = z_scale
+                    z = z_scale / 2
                 else:
                     z = 0
 
@@ -233,7 +236,7 @@ def main():
         text_draw = ImageDraw.Draw(large_text_image)
 
         text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 3) * text_scale_factor
-        text_y_position = desired_size * text_scale_factor
+        text_y_position = (desired_size + 1) * text_scale_factor
 
         # Draw the text on the new larger image
         text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=large_font)
