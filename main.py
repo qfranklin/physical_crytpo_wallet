@@ -82,8 +82,6 @@ def main():
         y_scale = desired_size / height
         z_scale = qr_thickness  # Extrusion height
 
-        print(f"{height} {width} {desired_size} {x_scale} {y_scale}")
-
         # Prepare vertices and faces for STL
         vertices = []
         faces = []
@@ -148,23 +146,37 @@ def main():
         for y in range(base_extension_height):
             for x in range(base_extension_width):
 
-                print(f"{width} {x} {y} {(width - 1 - x) + y}")
+                #print(f"{width} {x} {y} {(width - 1 - x) + y}")
 
                 if ((base_extension_width - 1 - x) + (height - 1 - y)) < adjacency_range:
                     continue
 
                 qr_idx = len(vertices)
 
-                vertices.extend([
-                    [x * x_scale + desired_size, y * y_scale + y_offset, 0],
-                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                    [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
-                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
-                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness]
-                ])
+                if ((base_extension_width - 1 - x) + (height - 1 - y)) == adjacency_range:
+                    vertices.extend([
+                        [x * x_scale + desired_size, y * y_scale + y_offset, 0],
+                        [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                        [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, 0],
+                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
+                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness]
+                    ])
+
+                else:
+                    vertices.extend([
+                        [x * x_scale + desired_size, y * y_scale + y_offset, 0],
+                        [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                        [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness]
+                    ])
+                    
 
                 # Create faces for the cube (6 faces per cube)
                 faces.extend([
