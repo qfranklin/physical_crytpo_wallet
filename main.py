@@ -221,8 +221,8 @@ def main():
         
         text_draw = ImageDraw.Draw(large_text_image)
 
-        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 1) * text_scale_factor #-bbox[0] #(desired_size * idx) + (space_between_qrs * idx) + 7
-        text_y_position = desired_size * text_scale_factor #-bbox[1] #desired_size
+        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 3) * text_scale_factor
+        text_y_position = desired_size * text_scale_factor
 
         # Draw the text on the new larger image
         text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=large_font)
