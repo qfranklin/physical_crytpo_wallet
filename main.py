@@ -55,17 +55,15 @@ def main():
         # Determine row and column position for each QR code
         col = idx // grid_size
         row = idx % grid_size
-        x_offset = col * (desired_size + space_between_qrs)
-        y_offset = row * (desired_size + space_between_qrs)
-
-        x_offset += (base_extension * col)
+        x_offset = col * (desired_size + base_extension + (space_between_qrs * idx))
+        y_offset = row * (desired_size + (space_between_qrs * idx))
 
         # Generate QR Code
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=1,
-            border=5,
+            border=5, # 4 spaces is the qr code standard, but add one to account for outline
         )
         qr.add_data(data)
         qr.make(fit=True)
@@ -140,17 +138,16 @@ def main():
                 ])
         #'''
 
-        adjacency_range = 9
-        base_extension_height = int(desired_size / x_scale)
-        base_extension_width = int(base_extension / y_scale)
+        base_extension_height = int(round(desired_size / x_scale, 0))
+        base_extension_width = int(round(base_extension / y_scale, 0))
+        adjacency_range = base_extension_width
 
         # Add the base extension
         for y in range(base_extension_height):
             for x in range(base_extension_width):
 
-                if y == 0:
-                    z = z_scale
-                elif (x + 1) == base_extension_width or \
+                if y == 0 or \
+                  (x + 1) == base_extension_width or \
                   (y + 1) == base_extension_height or \
                   (((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1):
                     z = z_scale / 2
@@ -176,8 +173,19 @@ def main():
                     ])
                 elif ((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1:
 
-                    # This will make the edge cubes have a 45 degreee edge.
-                    if (x + 1) == base_extension_width: 
+                    print(f"{x} {y} {base_extension_height}")
+                    if (y + 1) == base_extension_height:
+                        vertices.extend([
+                            [x * x_scale + desired_size, y * y_scale + y_offset, 0],
+                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
+                        ])
+                    elif (x + 1) == base_extension_width: 
                         vertices.extend([
                             [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, 0],
                             [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
@@ -211,6 +219,19 @@ def main():
                         [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                     ])
                     
+                    '''
+                    vertices.extend([
+                        [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                        [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                        [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                        [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                        [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
+                        [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
+                        [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z],
+                        [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z]
+                    ])
+                    #'''
+                    
                 # Create faces for the cube (6 faces per cube)
                 faces.extend([
                     [qr_idx, qr_idx + 1, qr_idx + 2], [qr_idx, qr_idx + 2, qr_idx + 3],  # Bottom face
@@ -221,6 +242,7 @@ def main():
                     [qr_idx + 3, qr_idx + 0, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7]   # Left face
                 ])
 
+        print("\n")
         # Next section is for adding text to the bottom of the qr code. 
 
         # Scale the text up, then downsize. This prevents loss of resolution.
