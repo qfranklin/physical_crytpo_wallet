@@ -148,9 +148,8 @@ def main():
         for y in range(base_extension_height):
             for x in range(base_extension_width):
 
-                if y == 0:
-                    z = z_scale
-                elif (x + 1) == base_extension_width or \
+                if y == 0 or \
+                  (x + 1) == base_extension_width or \
                   (y + 1) == base_extension_height or \
                   (((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1):
                     z = z_scale / 2
