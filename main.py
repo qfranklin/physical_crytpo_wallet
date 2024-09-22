@@ -32,19 +32,48 @@ except ImportError:
 cls = lambda: os.system('cls'); 
 cls()
 
-def add_vertices(x_offset, y_offset, width, height, x_scale, y_scale, bottom_offset, top_limit):
+def add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, thickness, z, width, height):
+    """
+    Adds vertices to create a cube.
+    
+    Arguments:
+    - vertices: list to which the new vertices will be added.
+    - x_offset: the X-coordinate offset for positioning.
+    - y_offset: the Y-coordinate offset for positioning.
+    - x_scale: scaling factor for the X dimension.
+    - y_scale: scaling factor for the Y dimension.
+    - thickness: thickness of the object.
+    - z: the additional height (thickness) on top of the base (default is 0 for a flat plate).
+    - width: the width in terms of the number of grid units for the object (default is 1).
+    - height: the height in terms of the number of grid units for the object (default is 1).
+    """
+    vertices.extend([
+        [x_offset, y_offset, thickness],  # Bottom-left
+        [x_offset + width * x_scale, y_offset, thickness],  # Bottom-right
+        [x_offset + width * x_scale, y_offset + height * y_scale, thickness],  # Top-right
+        [x_offset, y_offset + height * y_scale, thickness],  # Top-left
+        [x_offset, y_offset, thickness + z],  # Bottom-left (raised)
+        [x_offset + width * x_scale, y_offset, thickness + z],  # Bottom-right (raised)
+        [x_offset + width * x_scale, y_offset + height * y_scale, thickness + z],  # Top-right (raised)
+        [x_offset, y_offset + height * y_scale, thickness + z]  # Top-left (raised)
+    ])
 
-    return [
-        [x_offset, y_offset, bottom_offset],
-        [x_offset + width * x_scale, y_offset, bottom_offset],
-        [x_offset + width * x_scale, y_offset + height * y_scale, bottom_offset],
-        [x_offset, y_offset + height * y_scale, bottom_offset],
-        [x_offset, y_offset, top_limit],
-        [x_offset + width * x_scale, y_offset, top_limit],
-        [x_offset + width * x_scale, y_offset + height * y_scale, top_limit],
-        [x_offset, y_offset + height * y_scale, top_limit]
-    ]
+def add_faces(faces, start_idx):
+    """
+    Adds the faces for a cube (or rectangular prism) to the face list.
 
+    Arguments:
+    - faces: list to which the new faces will be added.
+    - start_idx: the index at which the cube's vertices start in the vertices list.
+    """
+    faces.extend([
+        [start_idx, start_idx + 1, start_idx + 2], [start_idx, start_idx + 2, start_idx + 3],  # Bottom face
+        [start_idx + 4, start_idx + 5, start_idx + 6], [start_idx + 4, start_idx + 6, start_idx + 7],  # Top face
+        [start_idx, start_idx + 1, start_idx + 5], [start_idx, start_idx + 5, start_idx + 4],  # Side face
+        [start_idx + 1, start_idx + 2, start_idx + 6], [start_idx + 1, start_idx + 6, start_idx + 5],  # Side face
+        [start_idx + 2, start_idx + 3, start_idx + 7], [start_idx + 2, start_idx + 7, start_idx + 6],  # Side face
+        [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
+    ])
 
 def main():
 
@@ -96,16 +125,9 @@ def main():
         faces = []
 
         # Add baseplate vertices and faces
-        vertices.extend(add_vertices(x_offset, y_offset, width, height, y_scale, x_scale, 0, base_thickness))
-
-        faces.extend([
-            [0, 1, 2], [0, 2, 3],  # Bottom face
-            [4, 5, 6], [4, 6, 7],  # Top face
-            [0, 1, 5], [0, 5, 4],  # Side faces
-            [1, 2, 6], [1, 6, 5],
-            [2, 3, 7], [2, 7, 6],
-            [3, 0, 4], [3, 4, 7]
-        ])
+        # Add vertices for baseplate
+        add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, 0, base_thickness, width, height)
+        add_faces(faces, 0)
 
         # Define QR code vertices and faces for each pixel
         for y in range(height):
@@ -119,25 +141,9 @@ def main():
 
                 qr_idx = len(vertices)
 
-                vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z]
-                ])
-
-                # Create faces for the cube (6 faces per cube)
-                faces.extend([
-                    [qr_idx, qr_idx + 1, qr_idx + 5], [qr_idx, qr_idx + 5, qr_idx + 4],
-                    [qr_idx + 1, qr_idx + 2, qr_idx + 6], [qr_idx + 1, qr_idx + 6, qr_idx + 5],
-                    [qr_idx + 2, qr_idx + 3, qr_idx + 7], [qr_idx + 2, qr_idx + 7, qr_idx + 6],
-                    [qr_idx + 3, qr_idx, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7],
-                    [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7]
-                ])
+                # Add vertices for each QR cube
+                add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
+                add_faces(faces, qr_idx)
 
         base_extension_height = int(round(desired_size / x_scale, 0))
         base_extension_width = int(round(base_extension / y_scale, 0))
