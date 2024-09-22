@@ -143,28 +143,28 @@ def main():
                 add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
                 add_faces(faces, qr_idx)
 
-        base_extension_height = int(round(desired_size / x_scale, 0))
-        base_extension_width = int(round(base_extension / y_scale, 0))
-        adjacency_range = base_extension_width
+        extension_width = int(round(desired_size / x_scale, 0))
+        extension_height = int(round(base_extension / y_scale, 0))
+        adjacency_range = extension_height
 
         # Add the base extension
-        for y in range(base_extension_height):
-            for x in range(base_extension_width):
+        for y in range(extension_width):
+            for x in range(extension_height):
 
                 if y == 0 or \
-                  (x + 1) == base_extension_width or \
-                  (y + 1) == base_extension_height or \
-                  (((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1):
+                  (x + 1) == extension_height or \
+                  (y + 1) == extension_width or \
+                  (((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1):
                     z = z_scale
                 else:
                     z = 0
 
-                if ((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) < adjacency_range - 1:
+                if ((extension_height - 1 - x) + (extension_width - 1 - y)) < adjacency_range - 1:
                     continue
 
                 qr_idx = len(vertices)
 
-                if ((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range:
+                if ((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range:
                     # This will make the edge cubes have a 45 degreee edge.
                     vertices.extend([
                         [x * x_scale + desired_size, y * y_scale + y_offset, 0],
@@ -176,9 +176,9 @@ def main():
                         [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
                         [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                     ])
-                elif ((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1:
+                elif ((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1:
 
-                    if (y + 1) == base_extension_height:
+                    if (y + 1) == extension_width:
                         vertices.extend([
                             [x * x_scale + desired_size, y * y_scale + y_offset, 0],
                             [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
@@ -189,7 +189,7 @@ def main():
                             [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                             [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
-                    elif (x + 1) == base_extension_width: 
+                    elif (x + 1) == extension_height: 
                         vertices.extend([
                             [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, 0],
                             [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
