@@ -180,36 +180,37 @@ def main():
                 elif ((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1:
 
                     if (y + 1) == extension_width:
+                        #continue
                         vertices.extend([
                             [x * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                             [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                     elif (x + 1) == extension_height: 
                         vertices.extend([
                             [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, 0],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, 0],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness + z],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                            [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                     else:
                         vertices.extend([
                             [x * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                 else:
