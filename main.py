@@ -78,7 +78,7 @@ def add_faces(faces, start_idx):
 def main():
 
     # These variables are in milimeters
-    desired_size = 35 
+    desired_size = 40 
     layer_height = 0.2
     protrusion_thickness = layer_height * 1
     base_thickness = layer_height * 4
@@ -180,36 +180,37 @@ def main():
                 elif ((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1:
 
                     if (y + 1) == extension_width:
+                        #continue
                         vertices.extend([
                             [x * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                             [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                     elif (x + 1) == extension_height: 
                         vertices.extend([
                             [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, 0],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, 0],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness + z],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                            [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                     else:
                         vertices.extend([
                             [x * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, 0],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
                             [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                            [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                            [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                            [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                 else:
@@ -230,7 +231,7 @@ def main():
         
         text_draw = ImageDraw.Draw(large_text_image)
 
-        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 2) * text_scale_factor
+        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 5) * text_scale_factor
         text_y_position = (desired_size + 0) * text_scale_factor
 
         # Draw the text on the new larger image
