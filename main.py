@@ -32,6 +32,20 @@ except ImportError:
 cls = lambda: os.system('cls'); 
 cls()
 
+def add_vertices(x_offset, y_offset, width, height, x_scale, y_scale, bottom_offset, top_limit):
+
+    return [
+        [x_offset, y_offset, bottom_offset],
+        [x_offset + width * x_scale, y_offset, bottom_offset],
+        [x_offset + width * x_scale, y_offset + height * y_scale, bottom_offset],
+        [x_offset, y_offset + height * y_scale, bottom_offset],
+        [x_offset, y_offset, top_limit],
+        [x_offset + width * x_scale, y_offset, top_limit],
+        [x_offset + width * x_scale, y_offset + height * y_scale, top_limit],
+        [x_offset, y_offset + height * y_scale, top_limit]
+    ]
+
+
 def main():
 
     # These are in milimeters
@@ -82,16 +96,8 @@ def main():
         faces = []
 
         # Add baseplate vertices and faces
-        vertices.extend([
-            [x_offset, y_offset, 0],
-            [x_offset + width * x_scale, y_offset, 0],
-            [x_offset + width * x_scale, y_offset + height * y_scale, 0],
-            [x_offset, y_offset + height * y_scale, 0],
-            [x_offset, y_offset, base_thickness],
-            [x_offset + width * x_scale, y_offset, base_thickness],
-            [x_offset + width * x_scale, y_offset + height * y_scale, base_thickness],
-            [x_offset, y_offset + height * y_scale, base_thickness]
-        ])
+        vertices.extend(add_vertices(x_offset, y_offset, width, height, y_scale, x_scale, 0, base_thickness))
+
         faces.extend([
             [0, 1, 2], [0, 2, 3],  # Bottom face
             [4, 5, 6], [4, 6, 7],  # Top face
