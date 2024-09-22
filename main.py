@@ -214,26 +214,9 @@ def main():
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                 else:
-                    vertices.extend([
-                        [x * x_scale + desired_size, y * y_scale + y_offset, 0],
-                        [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, 0],
-                        [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
-                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, 0],
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-                    
-                # Create faces for the cube (6 faces per cube)
-                faces.extend([
-                    [qr_idx, qr_idx + 1, qr_idx + 2], [qr_idx, qr_idx + 2, qr_idx + 3],  # Bottom face
-                    [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7],  # Top face
-                    [qr_idx, qr_idx + 1, qr_idx + 5], [qr_idx, qr_idx + 5, qr_idx + 4],  # Front face
-                    [qr_idx + 2, qr_idx + 3, qr_idx + 7], [qr_idx + 2, qr_idx + 7, qr_idx + 6],  # Back face
-                    [qr_idx + 1, qr_idx + 2, qr_idx + 6], [qr_idx + 1, qr_idx + 6, qr_idx + 5],  # Right face
-                    [qr_idx + 3, qr_idx + 0, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7]   # Left face
-                ])
+                    add_vertices(vertices, x * x_scale + desired_size, y * y_scale + y_offset, x_scale, y_scale, 0, base_thickness + z, 1, 1)
+        
+                add_faces(faces, qr_idx)
 
         # Next section is for adding text to the bottom of the qr code. 
 
