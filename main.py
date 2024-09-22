@@ -257,31 +257,8 @@ def main():
                 if text_pixels[x, y] < 128:  # Black pixels = protruding areas
                     text_idx = len(vertices)
 
-                    # Create vertices without the QR code offset, apply your own scaling instead
-                    vertices.extend([
-                        [x, y, base_thickness + qr_thickness],  # Top-left
-                        [(x + 1), y, base_thickness + qr_thickness],  # Top-right
-                        [(x + 1), (y + 1), base_thickness + qr_thickness],  # Bottom-right
-                        [x, (y + 1), base_thickness + qr_thickness],  # Bottom-left
-                        [x, y, base_thickness],  # Base top-left
-                        [(x + 1), y, base_thickness],  # Base top-right
-                        [(x + 1), (y + 1), base_thickness],  # Base bottom-right
-                        [x, (y + 1), base_thickness]  # Base bottom-left
-                    ])
-
-                    # Define faces for each pixel (each square face consists of two triangles)
-                    faces.extend([
-                        [text_idx, text_idx + 1, text_idx + 2],
-                        [text_idx, text_idx + 2, text_idx + 3],
-                        [text_idx, text_idx + 1, text_idx + 5],
-                        [text_idx + 5, text_idx + 4, text_idx],
-                        [text_idx + 1, text_idx + 2, text_idx + 6],
-                        [text_idx + 1, text_idx + 6, text_idx + 5],
-                        [text_idx + 2, text_idx + 3, text_idx + 7],
-                        [text_idx + 2, text_idx + 7, text_idx + 6],
-                        [text_idx + 3, text_idx, text_idx + 4],
-                        [text_idx + 3, text_idx + 4, text_idx + 7]
-                    ])
+                    add_vertices(vertices, x, y, 1, 1, base_thickness, qr_thickness, 1, 1)
+                    add_faces(faces, text_idx)
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
