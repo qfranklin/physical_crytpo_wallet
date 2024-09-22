@@ -84,7 +84,6 @@ def main():
         vertices = []
         faces = []
 
-        #'''
         # Add baseplate vertices and faces
         vertices.extend([
             [x_offset, y_offset, 0],
@@ -136,7 +135,6 @@ def main():
                     [qr_idx + 3, qr_idx, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7],
                     [qr_idx + 4, qr_idx + 5, qr_idx + 6], [qr_idx + 4, qr_idx + 6, qr_idx + 7]
                 ])
-        #'''
 
         base_extension_height = int(round(desired_size / x_scale, 0))
         base_extension_width = int(round(base_extension / y_scale, 0))
@@ -173,7 +171,6 @@ def main():
                     ])
                 elif ((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1:
 
-                    print(f"{x} {y} {base_extension_height}")
                     if (y + 1) == base_extension_height:
                         vertices.extend([
                             [x * x_scale + desired_size, y * y_scale + y_offset, 0],
@@ -219,19 +216,6 @@ def main():
                         [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                     ])
                     
-                    '''
-                    vertices.extend([
-                        [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                        [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                        [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-                    #'''
-                    
                 # Create faces for the cube (6 faces per cube)
                 faces.extend([
                     [qr_idx, qr_idx + 1, qr_idx + 2], [qr_idx, qr_idx + 2, qr_idx + 3],  # Bottom face
@@ -242,11 +226,9 @@ def main():
                     [qr_idx + 3, qr_idx + 0, qr_idx + 4], [qr_idx + 3, qr_idx + 4, qr_idx + 7]   # Left face
                 ])
 
-        print("\n")
         # Next section is for adding text to the bottom of the qr code. 
 
         # Scale the text up, then downsize. This prevents loss of resolution.
-        #'''
         text_scale_factor = 2
         font_size = 11
         large_font = ImageFont.truetype("arial.ttf", font_size * text_scale_factor)
@@ -308,7 +290,6 @@ def main():
                         [text_idx + 3, text_idx, text_idx + 4],
                         [text_idx + 3, text_idx + 4, text_idx + 7]
                     ])
-        #'''
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
