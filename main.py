@@ -79,7 +79,7 @@ def main():
 
     # These are in milimeters
     desired_size = 46 
-    qr_thickness = 0.28
+    protrusion_thickness = 0.28
     base_thickness = 1.12
     base_extension = 15
     space_between_qrs = 5
@@ -118,7 +118,7 @@ def main():
         # Calculate scaling factors
         x_scale = desired_size / width
         y_scale = desired_size / height
-        z_scale = qr_thickness  # Extrusion height
+        z_scale = protrusion_thickness  # Extrusion height
 
         # Prepare vertices and faces for STL
         vertices = []
@@ -132,10 +132,8 @@ def main():
         # Define QR code vertices and faces for each pixel
         for y in range(height):
             for x in range(width):
-                if pixels[y, x] < 128:  # Black pixels only (for QR code)
+                if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:  # Black pixels only (for QR code)
                     z = z_scale  # Set height for black pixels
-                elif x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:
-                    z = z_scale / 2
                 else:
                     z = 0  # Set flat for white pixels
 
@@ -157,7 +155,7 @@ def main():
                   (x + 1) == base_extension_width or \
                   (y + 1) == base_extension_height or \
                   (((base_extension_width - 1 - x) + (base_extension_height - 1 - y)) == adjacency_range - 1):
-                    z = z_scale / 2
+                    z = z_scale
                 else:
                     z = 0
 
@@ -257,7 +255,7 @@ def main():
                 if text_pixels[x, y] < 128:  # Black pixels = protruding areas
                     text_idx = len(vertices)
 
-                    add_vertices(vertices, x, y, 1, 1, base_thickness, qr_thickness, 1, 1)
+                    add_vertices(vertices, x, y, 1, 1, base_thickness, z_scale, 1, 1)
                     add_faces(faces, text_idx)
 
         current_vertex_offset = len(all_vertices)
