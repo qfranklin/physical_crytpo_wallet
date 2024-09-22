@@ -36,9 +36,9 @@ cls()
 def main():
 
     ## These are in milimeters
-    desired_size = 51 
-    qr_thickness = 0.56
-    base_thickness = 0.84
+    desired_size = 46 
+    qr_thickness = 0.28
+    base_thickness = 1.12
     base_extension = 15
     space_between_qrs = 5
 
@@ -257,7 +257,7 @@ def main():
         
         text_draw = ImageDraw.Draw(large_text_image)
 
-        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 3) * text_scale_factor
+        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 2) * text_scale_factor
         text_y_position = (desired_size + 1) * text_scale_factor
 
         # Draw the text on the new larger image
