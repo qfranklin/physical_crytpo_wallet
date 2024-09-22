@@ -29,28 +29,26 @@ except ImportError:
     is_blender_env = False
 
 
-from os import system; 
-cls = lambda: system('cls'); 
+cls = lambda: os.system('cls'); 
 cls()
 
 def main():
 
-    ## These are in milimeters
+    # These are in milimeters
     desired_size = 46 
     qr_thickness = 0.28
     base_thickness = 1.12
     base_extension = 15
     space_between_qrs = 5
 
-    # Initialize overall vertices and faces for all QR codes
     all_vertices = []
     all_faces = []
 
     # Calculate grid layout dynamically
     total_qr_codes = len(config.grid_data)
-    grid_size = math.ceil(math.sqrt(total_qr_codes))  # Calculate grid size (rows and columns)
+    grid_size = math.ceil(math.sqrt(total_qr_codes))
 
-    # Loop over the list of strings (grid_data)
+    # Loop over the list of public/private keys
     for idx, data in enumerate(config.grid_data):
         # Determine row and column position for each QR code
         col = idx // grid_size
@@ -63,12 +61,11 @@ def main():
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=1,
-            border=5, # 4 spaces is the qr code standard, but add one to account for outline
+            border=5, # 4 units is the qr code standard, but add one to account for outline
         )
         qr.add_data(data)
         qr.make(fit=True)
 
-        # Save the QR code as an image (temp image in memory)
         img = qr.make_image(fill='black', back_color='white')
         img = img.convert('L')  # Convert to grayscale
         pixels = np.array(img)  # Get pixel data as a numpy array
