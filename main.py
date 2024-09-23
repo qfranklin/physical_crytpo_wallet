@@ -78,10 +78,10 @@ def add_faces(faces, start_idx):
 def main():
 
     # These variables are in milimeters
-    desired_size = 40 
+    desired_size = 45 
     layer_height = 0.2
-    protrusion_thickness = layer_height * 1
-    base_thickness = layer_height * 4
+    protrusion_thickness = layer_height * 2
+    base_thickness = layer_height * 5
     base_extension = 13
     space_between_qrs = 5
 
@@ -221,7 +221,7 @@ def main():
         # Next section is for adding text to the bottom of the qr code. 
 
         # Scale the text up, then downsize. This prevents loss of resolution.
-        text_scale_factor = 1
+        text_scale_factor = 2
         font_size = 11
         large_font = ImageFont.truetype("arial.ttf", font_size * text_scale_factor)
 
@@ -231,7 +231,7 @@ def main():
         
         text_draw = ImageDraw.Draw(large_text_image)
 
-        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 5) * text_scale_factor
+        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 2) * text_scale_factor
         text_y_position = (desired_size + 0) * text_scale_factor
 
         # Draw the text on the new larger image

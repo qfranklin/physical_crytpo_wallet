@@ -3,5 +3,5 @@ current_directory = 'path\\to\\qr_code_python\\'
 public_key = '1234567890abc'
 private_key = '1234567890abc'
 
-grid_data = [public_key, private_key]  # List of strings for QR codes
-text = ["Public", "Private"]
+grid_data = [personal_public_key, personal_private_key]
+text = ["P u b", "P r v"]
