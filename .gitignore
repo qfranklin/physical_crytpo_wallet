@@ -1,4 +1,5 @@
 config.py
-qr_code.stl
+qr.stl
+qr.gcode
 
 __pycache__/

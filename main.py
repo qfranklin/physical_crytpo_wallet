@@ -5,6 +5,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import math
 import sys
 import os
+import subprocess
 
 if '__file__' in globals():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -103,6 +104,28 @@ def insert_color_change(gcode_file, base_thickness, protrusion_thickness):
     # Output file (overwrite original if output_file not specified)
     with open(gcode_file, 'w') as file:
         file.writelines(lines)
+    
+def generate_gcode(stl_file, output_gcode, config_file):
+    """
+    Generates G-code using PrusaSlicer for the provided STL file.
+    
+    Arguments:
+    - stl_file: Path to the input STL file.
+    - output_gcode: Path to the output G-code file.
+    - config_file: Path to the PrusaSlicer configuration file.
+    """
+    prusa_slicer_path = config.prusa_slicer_path  # Path to PrusaSlicer executable
+
+    # Command to run PrusaSlicer via console
+    command = [
+        prusa_slicer_path, 
+        '--export-gcode',
+        '--load', config_file,  # Load the configuration file
+        '--output', output_gcode,  # Specify the output G-code file
+        stl_file  # Specify the STL file to slice
+    ]
+    
+    subprocess.run(command, check=True)
 
 def main():
 
@@ -303,8 +326,14 @@ def main():
         for j in range(3):
             qr_mesh.vectors[i][j] = all_vertices[face[j], :]
 
-    # Save as STL
-    qr_mesh.save(rf'{config.current_directory}qr_code.stl')
+    stl_file = config.current_directory + 'qr.stl'
+    gcode_file = config.current_directory + "qr.gcode"
+    prusa_config = config.current_directory + "prusa_slicer_config.ini"
+
+    qr_mesh.save(rf'{stl_file}')
+
+
+    generate_gcode(stl_file, gcode_file, prusa_config)
 
     if is_blender_env:
 
