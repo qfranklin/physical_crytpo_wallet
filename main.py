@@ -76,14 +76,16 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
-def insert_color_change(gcode_file, base_thickness, protrusion_thickness):
+def insert_color_change(gcode_file, target_thickness):
 
     # Convert target thickness to string format (e.g., "1.2" or similar)
-    target_thickness_str = f";{base_thickness + protrusion_thickness:.1f}"
+    target_thickness_str = f";{target_thickness:.1f}"
 
     # Read the G-code file
     with open(gcode_file, 'r') as file:
         lines = file.readlines()
+
+    print(f"{target_thickness} {target_thickness_str}")
 
     # Find all lines matching the target thickness string
     thickness_lines = [i for i, line in enumerate(lines) if target_thickness_str in line]
@@ -332,9 +334,8 @@ def main():
 
     qr_mesh.save(rf'{stl_file}')
 
-
     generate_gcode(stl_file, gcode_file, prusa_config)
-    insert_color_change(gcode_file, base_thickness, protrusion_thickness)
+    insert_color_change(gcode_file, base_thickness + layer_height)
 
     if is_blender_env:
 
