@@ -334,6 +334,7 @@ def main():
 
 
     generate_gcode(stl_file, gcode_file, prusa_config)
+    insert_color_change(gcode_file, base_thickness, protrusion_thickness)
 
     if is_blender_env:
 
