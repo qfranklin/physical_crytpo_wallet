@@ -75,6 +75,35 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
+def insert_color_change(gcode_file, base_thickness, protrusion_thickness):
+
+    # Convert target thickness to string format (e.g., "1.2" or similar)
+    target_thickness_str = f";{base_thickness + protrusion_thickness:.1f}"
+
+    # Read the G-code file
+    with open(gcode_file, 'r') as file:
+        lines = file.readlines()
+
+    # Find all lines matching the target thickness string
+    thickness_lines = [i for i, line in enumerate(lines) if target_thickness_str in line]
+
+    # Get the index of the second occurrence of the target thickness
+    second_instance_index = thickness_lines[1]
+
+    # Define the color change G-code block
+    color_change_gcode = [
+        ";COLOR_CHANGE,T0,#50E74C\n",  # The #50E74C is arbitrary and can be any hex color
+        "M600 ; Filament color change\n"
+    ]
+
+    # Insert the color change G-code block after the second instance of target thickness
+    insert_position = second_instance_index + 1
+    lines[insert_position:insert_position] = color_change_gcode
+
+    # Output file (overwrite original if output_file not specified)
+    with open(gcode_file, 'w') as file:
+        file.writelines(lines)
+
 def main():
 
     # These variables are in milimeters
