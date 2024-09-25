@@ -1,4 +1,5 @@
 current_directory = 'path\\to\\qr_code_python\\'
+prua_slicer_path = 'path\\to\\prusa-slicer-console.exe'
 
 public_key = '1234567890abc'
 private_key = '1234567890abc'
