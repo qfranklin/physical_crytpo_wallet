@@ -1,5 +1,7 @@
 config.py
 qr.stl
 qr.gcode
+rear_side_outline.pdf
+temp_image.png
 
 __pycache__/

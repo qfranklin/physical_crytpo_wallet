@@ -6,6 +6,8 @@ import math
 import sys
 import os
 import subprocess
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 if '__file__' in globals():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -334,8 +336,10 @@ def main():
 
     qr_mesh.save(rf'{stl_file}')
 
-    generate_gcode(stl_file, gcode_file, prusa_config)
-    insert_color_change(gcode_file, base_thickness + layer_height)
+    #generate_gcode(stl_file, gcode_file, prusa_config)
+    #insert_color_change(gcode_file, base_thickness + layer_height)
+
+    create_rear_template(desired_size + 1, 2, base_extension, "rear_side_outline.pdf")
 
     if is_blender_env:
 
@@ -356,6 +360,134 @@ def main():
         camera = bpy.data.objects['Camera']
         camera.rotation_euler = (1.1, 0, 0)  # Adjust the rotation as needed
         bpy.context.scene.camera = camera
+
+
+def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_mm, output_file):
+    # Convert mm to pixels based on DPI
+    square_size_px = int((square_size_mm / 25.4) * 300)
+    outline_thickness_px = int((outline_thickness_mm / 25.4) * 300)
+    extension_height_px = int((extension_height_mm / 25.4) * 300)
+
+    # Create a new image with a white background in pixel dimensions
+    img = Image.new('RGB', (square_size_px, square_size_px + extension_height_px), 'white')
+    draw = ImageDraw.Draw(img)
+
+    # Draw the square with the black outline
+    draw.rectangle(
+        [0, 0, square_size_px, square_size_px],  # Adjust rectangle to match exact size
+        outline="black",
+        width=outline_thickness_px
+    )
+
+    # Draw the extension outline
+    extension_top = square_size_px  # Start of extension
+    draw.polygon(
+        [
+            (-outline_thickness_px, extension_top - outline_thickness_px),  # Top left
+            (square_size_px, extension_top - outline_thickness_px),  # Top right
+            (square_size_px, square_size_px + extension_height_px),  # Bottom right
+            (extension_height_px, square_size_px + extension_height_px)  # Bottom left
+        ],
+        outline="black",
+        fill=None,
+        width=outline_thickness_px
+    )
+
+    # Add the text in the top square area
+    font = ImageFont.truetype("arial.ttf", 80)
+
+    # Function to wrap long single string text
+    def wrap_text(text, font, max_width):
+        lines = []
+        current_line = ""
+
+        for char in text:
+            test_line = current_line + char
+            # Check if adding the next character would exceed the max width
+            if draw.textbbox((0, 0), test_line, font=font)[2] <= max_width:
+                current_line = test_line
+            else:
+                # If it exceeds, add the current line to lines and start a new line
+                lines.append(current_line)
+                current_line = char  # Start a new line with the current character
+
+        # Add the last line if there is any text left
+        if current_line:
+            lines.append(current_line)
+
+        return lines
+
+    # Wrap the text
+    wrapped_text = []
+    current_line = ""
+
+    for char in config.personal_private_key:
+        test_line = current_line + char
+        # Check if adding the next character would exceed the max width
+        if draw.textbbox((0, 0), test_line, font=font)[2] <= (square_size_px - (outline_thickness_px * 2)):
+            current_line = test_line
+        else:
+            # If it exceeds, add the current line to wrapped_text and start a new line
+            wrapped_text.append(current_line)
+            current_line = char  # Start a new line with the current character
+
+    # Add the last line if there is any text left
+    if current_line:
+        wrapped_text.append(current_line)
+
+    # Calculate total height for the wrapped text
+    text_height = sum(draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in wrapped_text)
+
+    # Calculate initial y position for centering
+    text_y = ((square_size_px - (outline_thickness_px * 2)) - text_height) / 2  # Center text vertically
+
+    # Draw each line of wrapped text
+    for line in wrapped_text:
+        text_bbox = draw.textbbox((0, 0), line, font=font)
+        text_width = text_bbox[2] - text_bbox[0]  # Width of the line
+        text_x = (square_size_px - text_width) / 2  # Center text horizontally
+        draw.text((text_x, text_y), line, fill="black", font=font)
+        text_y += text_bbox[3] - text_bbox[1] + 5  # Move y position for the next line
+
+    # Draw text in the bottom polygon area
+    pub_text = "P r v"
+    pub_font = ImageFont.truetype("arial.ttf", 100)
+
+    # Calculate the bounding box for the "P u b" text
+    text_bbox = draw.textbbox((0, 0), pub_text, font=pub_font)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_x = ((square_size_px - text_width) / 2) + 50
+    text_y = square_size_px + extension_height_px - (text_bbox[3] - text_bbox[1]) - 50
+
+    draw.text((text_x, text_y), pub_text, fill="black", font=pub_font)
+
+    # Flip the image along the vertical axis
+    img = img.transpose(method=Image.Transpose.FLIP_LEFT_RIGHT)
+
+    # Save the image to a temporary file
+    img.save("temp_image.png", dpi=(300, 300))
+
+    # Create a PDF document with ReportLab
+    c = canvas.Canvas(output_file, pagesize=letter)
+    width, height = letter  # Letter size in points (1 point = 1/72 inch)
+
+    # Calculate the size of the image in inches
+    img_width_inch = square_size_mm / 25.4
+    img_height_inch = (square_size_mm + extension_height_mm) / 25.4
+
+    # Convert image size to points (1 inch = 72 points)
+    img_width_pt = img_width_inch * 72
+    img_height_pt = img_height_inch * 72
+
+    # Center the image on the page
+    x_offset = (width - img_width_pt) / 2
+    y_offset = (height - img_height_pt) / 2
+
+    # Draw the image on the PDF
+    c.drawImage("temp_image.png", x_offset, y_offset, img_width_pt, img_height_pt)
+
+    # Save the PDF
+    c.save()
 
 if __name__ == "__main__":
     main()
