@@ -339,7 +339,7 @@ def main():
     #generate_gcode(stl_file, gcode_file, prusa_config)
     #insert_color_change(gcode_file, base_thickness + layer_height)
 
-    create_rear_template(desired_size + 1, 2, base_extension, "rear_side_outline.pdf")
+    create_rear_template(desired_size, 2, base_extension, "rear_side_outline.pdf")
 
     if is_blender_env:
 
@@ -372,59 +372,31 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
     img = Image.new('RGB', (square_size_px, square_size_px + extension_height_px), 'white')
     draw = ImageDraw.Draw(img)
 
-    # Draw the square with the black outline
-    draw.rectangle(
-        [0, 0, square_size_px, square_size_px],  # Adjust rectangle to match exact size
-        outline="black",
-        width=outline_thickness_px
-    )
-
-    # Draw the extension outline
-    extension_top = square_size_px  # Start of extension
+    # Draw the outline
     draw.polygon(
         [
-            (-outline_thickness_px, extension_top - outline_thickness_px),  # Top left
-            (square_size_px, extension_top - outline_thickness_px),  # Top right
-            (square_size_px, square_size_px + extension_height_px),  # Bottom right
-            (extension_height_px, square_size_px + extension_height_px)  # Bottom left
-        ],
-        outline="black",
-        fill=None,
+            (0, 0), 
+            (square_size_px, 0),
+            (square_size_px, square_size_px + extension_height_px),
+            (extension_height_px, square_size_px + extension_height_px),
+            (0, square_size_px)
+        ], 
+        outline="black", 
+        fill=None, 
         width=outline_thickness_px
     )
 
     # Add the text in the top square area
     font = ImageFont.truetype("arial.ttf", 80)
 
-    # Function to wrap long single string text
-    def wrap_text(text, font, max_width):
-        lines = []
-        current_line = ""
-
-        for char in text:
-            test_line = current_line + char
-            # Check if adding the next character would exceed the max width
-            if draw.textbbox((0, 0), test_line, font=font)[2] <= max_width:
-                current_line = test_line
-            else:
-                # If it exceeds, add the current line to lines and start a new line
-                lines.append(current_line)
-                current_line = char  # Start a new line with the current character
-
-        # Add the last line if there is any text left
-        if current_line:
-            lines.append(current_line)
-
-        return lines
-
     # Wrap the text
     wrapped_text = []
     current_line = ""
 
-    for char in config.personal_private_key:
+    for char in "longstring":
         test_line = current_line + char
         # Check if adding the next character would exceed the max width
-        if draw.textbbox((0, 0), test_line, font=font)[2] <= (square_size_px - (outline_thickness_px * 2)):
+        if draw.textbbox((0, 0), test_line, font=font)[2] <= (square_size_px - (outline_thickness_px * 4)):
             current_line = test_line
         else:
             # If it exceeds, add the current line to wrapped_text and start a new line
@@ -448,18 +420,6 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
         text_x = (square_size_px - text_width) / 2  # Center text horizontally
         draw.text((text_x, text_y), line, fill="black", font=font)
         text_y += text_bbox[3] - text_bbox[1] + 5  # Move y position for the next line
-
-    # Draw text in the bottom polygon area
-    pub_text = "P r v"
-    pub_font = ImageFont.truetype("arial.ttf", 100)
-
-    # Calculate the bounding box for the "P u b" text
-    text_bbox = draw.textbbox((0, 0), pub_text, font=pub_font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_x = ((square_size_px - text_width) / 2) + 50
-    text_y = square_size_px + extension_height_px - (text_bbox[3] - text_bbox[1]) - 50
-
-    draw.text((text_x, text_y), pub_text, fill="black", font=pub_font)
 
     # Flip the image along the vertical axis
     img = img.transpose(method=Image.Transpose.FLIP_LEFT_RIGHT)
