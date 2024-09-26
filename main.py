@@ -362,7 +362,7 @@ def main():
         bpy.context.scene.camera = camera
 
 
-def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_mm, output_file):
+def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_mm):
     # Convert mm to pixels based on DPI
     square_size_px = int((square_size_mm / 25.4) * 300)
     outline_thickness_px = int((outline_thickness_mm / 25.4) * 300)
@@ -428,7 +428,7 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
     img.save("temp_image.png", dpi=(300, 300))
 
     # Create a PDF document with ReportLab
-    c = canvas.Canvas(output_file, pagesize=letter)
+    c = canvas.Canvas("rear_side_outline.pdf", pagesize=letter)
     width, height = letter  # Letter size in points (1 point = 1/72 inch)
 
     # Calculate the size of the image in inches
