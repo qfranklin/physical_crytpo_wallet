@@ -434,7 +434,7 @@ def main():
     if is_blender_env:
 
         # Path to your STL file
-        stl_file_path = config.current_directory + "qr_code.stl"
+        stl_file_path = stl_file
 
         # Clear existing objects in the scene
         bpy.ops.object.select_all(action='DESELECT')
