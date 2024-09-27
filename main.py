@@ -317,7 +317,7 @@ def main():
 
                 loop_idx = len(vertices)
 
-                add_vertices(vertices, x + x_offset - 10, y + y_offset, 1, 1, 0, protrusion_thickness + base_thickness, 1, 1)
+                add_vertices(vertices, x + x_offset - 10, y + y_offset + ((desired_size - 15) / 2), 1, 1, 0, protrusion_thickness + base_thickness, 1, 1)
                 add_faces(faces, loop_idx)
 
         extension_width = int(round(desired_size / x_scale, 0))
