@@ -434,11 +434,25 @@ def main():
     all_vertices = np.array(all_vertices)
     all_faces = np.array(all_faces)
 
+    # Rotate all objects by 270 degrees for easier 3d printing
+    rotation_angle = np.radians(270)
+    rotation_matrix = np.array([
+        [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
+        [np.sin(rotation_angle), np.cos(rotation_angle), 0],
+        [0, 0, 1]
+    ])
+
+    # Do not apply the rotation in Blender development env
+    if is_blender_env:
+        rotated_vertices = all_vertices
+    else:
+        rotated_vertices = np.dot(all_vertices, rotation_matrix)
+
     # Create STL mesh and save
     qr_mesh = mesh.Mesh(np.zeros(all_faces.shape[0], dtype=mesh.Mesh.dtype))
     for i, face in enumerate(all_faces):
         for j in range(3):
-            qr_mesh.vectors[i][j] = all_vertices[face[j], :]
+            qr_mesh.vectors[i][j] = rotated_vertices[face[j], :]
 
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
