@@ -149,6 +149,7 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
     draw = ImageDraw.Draw(img)
 
     font = ImageFont.truetype("arial.ttf", 80)
+    bottom_font = ImageFont.truetype("arial.ttf", 40)
 
     # Loop over the grid and create each QR code image
     for idx, data in enumerate(config.grid_data):
@@ -200,6 +201,15 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
             text_x = top_left_x + (square_size_px - text_width) / 2  # Center text horizontally
             draw.text((text_x, text_y), line, fill="black", font=font)
             text_y += text_bbox[3] - text_bbox[1] + 5  # Move y position for the next line
+
+        bottom_text = config.rear_side_bottom_text[idx]
+        bottom_text_bbox = draw.textbbox((0, 0), bottom_text, font=bottom_font)
+        bottom_text_width = bottom_text_bbox[2] - bottom_text_bbox[0]
+
+        bottom_text_x = (top_left_x + (square_size_px - bottom_text_width) / 2) + (extension_height_px / 2)
+        bottom_text_y = (top_left_y + square_size_px + (extension_height_px - bottom_text_bbox[3]) / 2) - 10
+
+        draw.text((bottom_text_x, bottom_text_y), bottom_text, fill="black", font=bottom_font)
 
     # Flip the entire image along the vertical axis (if required)
     img = img.transpose(method=Image.Transpose.FLIP_LEFT_RIGHT)
@@ -445,8 +455,8 @@ def main():
     else:
         gcode_file = config.current_directory + "qr.gcode"
         prusa_config = config.current_directory + "prusa_slicer_config.ini"
-        generate_gcode(stl_file, gcode_file, prusa_config)
-        insert_color_change(gcode_file, base_thickness + layer_height)
+        #generate_gcode(stl_file, gcode_file, prusa_config)
+        #insert_color_change(gcode_file, base_thickness + layer_height)
 
         create_rear_template(desired_size, 2, base_extension)
 
