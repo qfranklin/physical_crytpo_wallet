@@ -308,6 +308,18 @@ def main():
                 add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
                 add_faces(faces, qr_idx)
 
+        # Add loop
+        for y in range(15):
+            for x in range(10):
+
+                if(3 < y < 11 and x > 3):
+                    continue
+
+                loop_idx = len(vertices)
+
+                add_vertices(vertices, x + x_offset - 10, y + y_offset, 1, 1, 0, protrusion_thickness + base_thickness, 1, 1)
+                add_faces(faces, loop_idx)
+
         extension_width = int(round(desired_size / x_scale, 0))
         extension_height = int(round(base_extension / y_scale, 0))
         adjacency_range = extension_height
@@ -383,8 +395,6 @@ def main():
                 add_faces(faces, qr_idx)
 
         # Next section is for adding text to the bottom of the qr code. 
-
-        # Scale the text up, then downsize. This prevents loss of resolution.
         font_size = 11
         font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
