@@ -479,8 +479,8 @@ def main():
     else:
         gcode_file = config.current_directory + "qr.gcode"
         prusa_config = config.current_directory + "prusa_slicer_config.ini"
-        #generate_gcode(stl_file, gcode_file, prusa_config)
-        #insert_color_change(gcode_file, base_thickness + layer_height)
+        generate_gcode(stl_file, gcode_file, prusa_config)
+        insert_color_change(gcode_file, base_thickness + layer_height)
 
         create_rear_template(desired_size, 2, base_extension)
 
