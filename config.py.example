@@ -5,4 +5,5 @@ public_key = '1234567890abc'
 private_key = '1234567890abc'
 
 grid_data = [personal_public_key, personal_private_key]
-text = ["P u b", "P r v"]
+text = ["$1 eth", "$1 eth"]
+rear_side_bottom_text = ["Public Key\n0.0011111 ETH\n$2,000.11", "Private Key\n0.0011111 ETH\n$2,000.11"]
