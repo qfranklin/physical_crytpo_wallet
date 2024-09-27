@@ -308,6 +308,18 @@ def main():
                 add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
                 add_faces(faces, qr_idx)
 
+        # Add loop
+        for y in range(15):
+            for x in range(10):
+
+                if(3 < y < 11 and x > 3):
+                    continue
+
+                loop_idx = len(vertices)
+
+                add_vertices(vertices, x + x_offset - 10, y + y_offset + ((desired_size - 15) / 2), 1, 1, 0, base_thickness, 1, 1)
+                add_faces(faces, loop_idx)
+
         extension_width = int(round(desired_size / x_scale, 0))
         extension_height = int(round(base_extension / y_scale, 0))
         adjacency_range = extension_height
@@ -383,8 +395,6 @@ def main():
                 add_faces(faces, qr_idx)
 
         # Next section is for adding text to the bottom of the qr code. 
-
-        # Scale the text up, then downsize. This prevents loss of resolution.
         font_size = 11
         font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
@@ -424,11 +434,25 @@ def main():
     all_vertices = np.array(all_vertices)
     all_faces = np.array(all_faces)
 
+    # Rotate all objects by 270 degrees for easier 3d printing
+    rotation_angle = np.radians(270)
+    rotation_matrix = np.array([
+        [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
+        [np.sin(rotation_angle), np.cos(rotation_angle), 0],
+        [0, 0, 1]
+    ])
+
+    # Do not apply the rotation in Blender development env
+    if is_blender_env:
+        rotated_vertices = all_vertices
+    else:
+        rotated_vertices = np.dot(all_vertices, rotation_matrix)
+
     # Create STL mesh and save
     qr_mesh = mesh.Mesh(np.zeros(all_faces.shape[0], dtype=mesh.Mesh.dtype))
     for i, face in enumerate(all_faces):
         for j in range(3):
-            qr_mesh.vectors[i][j] = all_vertices[face[j], :]
+            qr_mesh.vectors[i][j] = rotated_vertices[face[j], :]
 
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
@@ -455,8 +479,8 @@ def main():
     else:
         gcode_file = config.current_directory + "qr.gcode"
         prusa_config = config.current_directory + "prusa_slicer_config.ini"
-        #generate_gcode(stl_file, gcode_file, prusa_config)
-        #insert_color_change(gcode_file, base_thickness + layer_height)
+        generate_gcode(stl_file, gcode_file, prusa_config)
+        insert_color_change(gcode_file, base_thickness + layer_height)
 
         create_rear_template(desired_size, 2, base_extension)
 
