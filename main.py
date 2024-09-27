@@ -236,7 +236,7 @@ def main():
     layer_height = 0.2
     protrusion_thickness = layer_height * 2
     base_thickness = layer_height * 5
-    base_extension = 13
+    base_extension = 14
     space_between_qrs = 5
 
     all_vertices = []
@@ -375,30 +375,22 @@ def main():
         # Next section is for adding text to the bottom of the qr code. 
 
         # Scale the text up, then downsize. This prevents loss of resolution.
-        text_scale_factor = 2
         font_size = 11
-        large_font = ImageFont.truetype("arial.ttf", font_size * text_scale_factor)
+        font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
         text_width = 500
         text_height = 500
-        large_text_image = Image.new('L', (text_width, text_height), color=255)
+        text_image = Image.new('L', (text_width, text_height), color=255)
         
-        text_draw = ImageDraw.Draw(large_text_image)
+        text_draw = ImageDraw.Draw(text_image)
 
-        text_x_position = ((desired_size * idx) + (space_between_qrs * idx) + 2) * text_scale_factor
-        text_y_position = (desired_size + 0) * text_scale_factor
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 1
+        text_y_position = desired_size + 1
 
         # Draw the text on the new larger image
-        text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=large_font)
+        text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=font)
 
-        # Step 3: Resize the image down to the desired final size
-        # The text image is created larger, so now we reduce the size for better resolution.
-        text_image = large_text_image.resize(
-            (text_width // text_scale_factor, text_height // text_scale_factor),
-            Image.Resampling.LANCZOS
-        )
-
-        # Optional image transformations: mirror and rotate (depends on your use case)
+        # Correctly orient the image
         text_image = ImageOps.mirror(text_image)
         text_image = text_image.rotate(90, expand=True)
 
