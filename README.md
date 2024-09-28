@@ -29,7 +29,7 @@ This script generates 3D meshes from QR codes and saves them as STL files. It ca
 
    Blender Terminal
    ```bash
-   exec(open("path\\to\\qr_code_python\\main.py").read(), {'__file__': "path\\to\\qr_code_python\\main.py", '__name__': '__main__'})
+   exec(open("path\\to\\qr_code_python\\blender_main.py").read(), {'__file__': "path\\to\\qr_code_python\\blender_main.py", '__name__': '__main__'})
    ```
 
 ## Citation
