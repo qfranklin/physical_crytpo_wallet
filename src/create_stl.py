@@ -55,7 +55,7 @@ def qr_code():
 
     # These variables are in milimeters
     desired_size = 45
-    layer_height = 0.2
+    layer_height = 0.16
     protrusion_thickness = layer_height * 2
     base_thickness = layer_height * 5
     base_extension = 14
@@ -254,3 +254,5 @@ def qr_code():
 
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
+
+    return round(base_thickness + layer_height, 2)

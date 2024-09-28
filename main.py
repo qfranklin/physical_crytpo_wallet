@@ -1,63 +1,11 @@
 from PIL import Image, ImageDraw, ImageFont
 import math
-import subprocess
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
 import src.create_stl as create_stl
 import config.config as config
-
-def insert_color_change(gcode_file, target_thickness):
-
-    # Convert target thickness to string format (e.g., "1.2" or similar)
-    target_thickness_str = f";{target_thickness:.1f}"
-
-    # Read the G-code file
-    with open(gcode_file, 'r') as file:
-        lines = file.readlines()
-
-    print(f"{target_thickness} {target_thickness_str}")
-
-    # Find all lines matching the target thickness string
-    thickness_lines = [i for i, line in enumerate(lines) if target_thickness_str in line]
-
-    # Get the index of the second occurrence of the target thickness
-    second_instance_index = thickness_lines[1]
-
-    # Define the color change G-code block
-    color_change_gcode = [
-        ";COLOR_CHANGE,T0,#50E74C\n",  # The #50E74C is arbitrary and can be any hex color
-        "M600 ; Filament color change\n"
-    ]
-
-    # Insert the color change G-code block after the second instance of target thickness
-    insert_position = second_instance_index + 1
-    lines[insert_position:insert_position] = color_change_gcode
-
-    # Output file (overwrite original if output_file not specified)
-    with open(gcode_file, 'w') as file:
-        file.writelines(lines)
-    
-def generate_gcode(stl_file, output_gcode, config_file):
-    """
-    Generates G-code using PrusaSlicer for the provided STL file.
-    
-    Arguments:
-    - stl_file: Path to the input STL file.
-    - output_gcode: Path to the output G-code file.
-    - config_file: Path to the PrusaSlicer configuration file.
-    """
-
-    # Command to run PrusaSlicer via console
-    command = [
-        prusa_slicer_path, 
-        '--export-gcode',
-        '--load', config_file,  # Load the configuration file
-        '--output', output_gcode,  # Specify the output G-code file
-        stl_file  # Specify the STL file to slice
-    ]
-    
-    subprocess.run(command, check=True)
+import src.gcode as gcode
 
 def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_mm):
     # Convert mm to pixels based on DPI
@@ -168,12 +116,9 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
     c.save()
 
 def main():
-    create_stl.qr_code()
-
-    gcode_file = config.current_directory + "qr.gcode"
-    prusa_config = config.current_directory + "prusa_slicer_config.ini"
-    #generate_gcode(stl_file, gcode_file, prusa_config)
-    #insert_color_change(gcode_file, base_thickness + layer_height)
+    gcode_target_thickness = create_stl.qr_code()
+    gcode.generate_gcode()
+    gcode.insert_color_change(0.96)
     #create_rear_template(desired_size, 2, base_extension)
 
 if __name__ == "__main__":
