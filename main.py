@@ -243,7 +243,7 @@ def main():
 
     # These variables are in milimeters
     desired_size = 45 
-    layer_height = 0.2
+    layer_height = 0.16
     protrusion_thickness = layer_height * 2
     base_thickness = layer_height * 5
     base_extension = 14
@@ -317,7 +317,7 @@ def main():
 
                 loop_idx = len(vertices)
 
-                add_vertices(vertices, x + x_offset - 10, y + y_offset + ((desired_size - 15) / 2), 1, 1, 0, base_thickness, 1, 1)
+                add_vertices(vertices, x + x_offset - 10, y + y_offset + ((desired_size - 15) / 2), 1, 1, 0, protrusion_thickness + base_thickness, 1, 1)
                 add_faces(faces, loop_idx)
 
         extension_width = int(round(desired_size / x_scale, 0))
@@ -435,7 +435,7 @@ def main():
     all_faces = np.array(all_faces)
 
     # Rotate all objects by 270 degrees for easier 3d printing
-    rotation_angle = np.radians(270)
+    rotation_angle = np.radians(90)
     rotation_matrix = np.array([
         [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
         [np.sin(rotation_angle), np.cos(rotation_angle), 0],
