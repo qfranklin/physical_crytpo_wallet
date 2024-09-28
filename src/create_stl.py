@@ -4,9 +4,7 @@ from stl import mesh
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import math
 
-from config.config import qr_code_text
-from config.config import current_directory
-from config.config import front_side_text
+import config.config as config
 
 
 
@@ -53,10 +51,10 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
-def create_stl():
+def qr_code():
 
     # These variables are in milimeters
-    desired_size = 45 
+    desired_size = 45
     layer_height = 0.2
     protrusion_thickness = layer_height * 2
     base_thickness = layer_height * 5
@@ -67,11 +65,11 @@ def create_stl():
     all_faces = []
 
     # Calculate grid layout dynamically
-    total_qr_codes = len(qr_code_text)
+    total_qr_codes = len(config.qr_code_text)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
 
     # Loop over the list of public/private keys
-    for idx, data in enumerate(qr_code_text):
+    for idx, data in enumerate(config.qr_code_text):
         # Determine row and column position for each QR code
         col = idx // grid_size
         row = idx % grid_size
@@ -210,7 +208,7 @@ def create_stl():
 
         # Next section is for adding text to the bottom of the qr code. 
         font_size = 11
-        font = ImageFont.truetype(current_directory + "text_font.ttf", font_size)
+        font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
         text_width = 500
         text_height = 500
@@ -222,7 +220,7 @@ def create_stl():
         text_y_position = desired_size + 1
 
         # Draw the text on the new larger image
-        text_draw.text((text_x_position, text_y_position), front_side_text[idx], fill=0, font=font)
+        text_draw.text((text_x_position, text_y_position), config.front_side_text[idx], fill=0, font=font)
 
         # Correctly orient the image
         text_image = ImageOps.mirror(text_image)
@@ -254,5 +252,5 @@ def create_stl():
         for j in range(3):
             qr_mesh.vectors[i][j] = all_vertices[face[j], :]
 
-    stl_file = current_directory + 'qr.stl'
+    stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')

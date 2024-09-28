@@ -1,88 +1,11 @@
-import qrcode
-import numpy as np
-from stl import mesh
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont
 import math
-import sys
-import os
 import subprocess
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-
-
-if '__file__' in globals():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-else:
-    # Provide a default directory when running within Blender
-    script_dir = os.path.dirname(bpy.data.filepath)
-
-# Add the directory of config.py to sys.path to make sure Blender can detect it
-script_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(script_dir)
-
-from src.create_stl import create_stl
-
-from config.config import qr_code_text
-from config.config import current_directory
-from config.config import front_side_text
-from config.config import prusa_slicer_path
-
-try:
-    import bpy  
-    import config.config as config
-    import importlib
-    is_blender_env = True
-    importlib.reload(config) # Cache bust Blender
-except ImportError:
-    is_blender_env = False
-
-
-cls = lambda: os.system('cls'); 
-cls()
-
-def add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, thickness, z, width, height):
-    """
-    Adds vertices to create a cube.
-    
-    Arguments:
-    - vertices: list to which the new vertices will be added.
-    - x_offset: the X-coordinate offset for positioning.
-    - y_offset: the Y-coordinate offset for positioning.
-    - x_scale: scaling factor for the X dimension.
-    - y_scale: scaling factor for the Y dimension.
-    - thickness: thickness of the object.
-    - z: the additional height (thickness) on top of the base (default is 0 for a flat plate).
-    - width: the width in terms of the number of grid units for the object (default is 1).
-    - height: the height in terms of the number of grid units for the object (default is 1).
-    """
-    vertices.extend([
-        [x_offset, y_offset, thickness],  # Bottom-left
-        [x_offset + width * x_scale, y_offset, thickness],  # Bottom-right
-        [x_offset + width * x_scale, y_offset + height * y_scale, thickness],  # Top-right
-        [x_offset, y_offset + height * y_scale, thickness],  # Top-left
-        [x_offset, y_offset, thickness + z],  # Bottom-left (raised)
-        [x_offset + width * x_scale, y_offset, thickness + z],  # Bottom-right (raised)
-        [x_offset + width * x_scale, y_offset + height * y_scale, thickness + z],  # Top-right (raised)
-        [x_offset, y_offset + height * y_scale, thickness + z]  # Top-left (raised)
-    ])
-
-def add_faces(faces, start_idx):
-    """
-    Adds the faces for a cube (or rectangular prism) to the face list.
-
-    Arguments:
-    - faces: list to which the new faces will be added.
-    - start_idx: the index at which the cube's vertices start in the vertices list.
-    """
-    faces.extend([
-        [start_idx, start_idx + 1, start_idx + 2], [start_idx, start_idx + 2, start_idx + 3],  # Bottom face
-        [start_idx + 4, start_idx + 5, start_idx + 6], [start_idx + 4, start_idx + 6, start_idx + 7],  # Top face
-        [start_idx, start_idx + 1, start_idx + 5], [start_idx, start_idx + 5, start_idx + 4],  # Side face
-        [start_idx + 1, start_idx + 2, start_idx + 6], [start_idx + 1, start_idx + 6, start_idx + 5],  # Side face
-        [start_idx + 2, start_idx + 3, start_idx + 7], [start_idx + 2, start_idx + 7, start_idx + 6],  # Side face
-        [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
-    ])
+import src.create_stl as create_stl
+import config.config as config
 
 def insert_color_change(gcode_file, target_thickness):
 
@@ -245,36 +168,13 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
     c.save()
 
 def main():
+    create_stl.qr_code()
 
-    create_stl()
-    stl_file = current_directory + 'qr.stl'
-
-    if is_blender_env:
-
-        # Path to your STL file
-        stl_file_path = stl_file
-
-        # Clear existing objects in the scene
-        bpy.ops.object.select_all(action='DESELECT')
-        bpy.ops.object.select_by_type(type='MESH')
-        bpy.ops.object.delete()
-
-        # Import the STL file
-        bpy.ops.import_mesh.stl(filepath=stl_file_path)
-
-        # Add a camera if there isn't one
-        if 'Camera' not in bpy.data.objects:
-            bpy.ops.object.camera_add(location=(0, -5, 5))
-        camera = bpy.data.objects['Camera']
-        camera.rotation_euler = (1.1, 0, 0)  # Adjust the rotation as needed
-        bpy.context.scene.camera = camera
-    else:
-        gcode_file = current_directory + "qr.gcode"
-        prusa_config = current_directory + "prusa_slicer_config.ini"
-        generate_gcode(stl_file, gcode_file, prusa_config)
-        insert_color_change(gcode_file, base_thickness + layer_height)
-
-        create_rear_template(desired_size, 2, base_extension)
+    gcode_file = config.current_directory + "qr.gcode"
+    prusa_config = config.current_directory + "prusa_slicer_config.ini"
+    #generate_gcode(stl_file, gcode_file, prusa_config)
+    #insert_color_change(gcode_file, base_thickness + layer_height)
+    #create_rear_template(desired_size, 2, base_extension)
 
 if __name__ == "__main__":
     main()
