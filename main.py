@@ -9,22 +9,24 @@ import subprocess
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
+from config.config import qr_code_text
+from config.config import current_directory
+from config.config import front_side_text
+from config.config import prusa_slicer_path
+
 if '__file__' in globals():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 else:
     # Provide a default directory when running within Blender
     script_dir = os.path.dirname(bpy.data.filepath)
 
-
-
 # Add the directory of config.py to sys.path to make sure Blender can detect it
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 
-import config
-
 try:
     import bpy  
+    import config.config as config
     import importlib
     is_blender_env = True
     importlib.reload(config) # Cache bust Blender
@@ -118,7 +120,6 @@ def generate_gcode(stl_file, output_gcode, config_file):
     - output_gcode: Path to the output G-code file.
     - config_file: Path to the PrusaSlicer configuration file.
     """
-    prusa_slicer_path = config.prusa_slicer_path  # Path to PrusaSlicer executable
 
     # Command to run PrusaSlicer via console
     command = [
@@ -139,7 +140,7 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
 
     space_between_images = 10
     
-    total_qr_codes = len(config.grid_data)
+    total_qr_codes = len(qr_code_text)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
 
     img_width = (square_size_px * grid_size) + (space_between_images * (grid_size - 1))
@@ -152,7 +153,7 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
     bottom_font = ImageFont.truetype("arial.ttf", 40)
 
     # Loop over the grid and create each QR code image
-    for idx, data in enumerate(config.grid_data):
+    for idx, data in enumerate(qr_code_text):
         row = idx // grid_size
         col = idx % grid_size
 
@@ -170,7 +171,7 @@ def create_rear_template(square_size_mm, outline_thickness_mm, extension_height_
         ]
         draw.polygon(polygon_points, outline="black", fill=None, width=outline_thickness_px)
 
-        # Add the text (config.text[idx]) in the top square area
+        # Add the text (front_side_text[idx]) in the top square area
         wrapped_text = []
         current_line = ""
 
@@ -243,7 +244,7 @@ def main():
 
     # These variables are in milimeters
     desired_size = 45 
-    layer_height = 0.16
+    layer_height = 0.2
     protrusion_thickness = layer_height * 2
     base_thickness = layer_height * 5
     base_extension = 14
@@ -253,11 +254,11 @@ def main():
     all_faces = []
 
     # Calculate grid layout dynamically
-    total_qr_codes = len(config.grid_data)
+    total_qr_codes = len(qr_code_text)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
 
     # Loop over the list of public/private keys
-    for idx, data in enumerate(config.grid_data):
+    for idx, data in enumerate(qr_code_text):
         # Determine row and column position for each QR code
         col = idx // grid_size
         row = idx % grid_size
@@ -396,7 +397,7 @@ def main():
 
         # Next section is for adding text to the bottom of the qr code. 
         font_size = 11
-        font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
+        font = ImageFont.truetype(current_directory + "text_font.ttf", font_size)
 
         text_width = 500
         text_height = 500
@@ -408,7 +409,7 @@ def main():
         text_y_position = desired_size + 1
 
         # Draw the text on the new larger image
-        text_draw.text((text_x_position, text_y_position), config.text[idx], fill=0, font=font)
+        text_draw.text((text_x_position, text_y_position), front_side_text[idx], fill=0, font=font)
 
         # Correctly orient the image
         text_image = ImageOps.mirror(text_image)
@@ -454,7 +455,7 @@ def main():
         for j in range(3):
             qr_mesh.vectors[i][j] = rotated_vertices[face[j], :]
 
-    stl_file = config.current_directory + 'qr.stl'
+    stl_file = current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
 
     if is_blender_env:
@@ -477,8 +478,8 @@ def main():
         camera.rotation_euler = (1.1, 0, 0)  # Adjust the rotation as needed
         bpy.context.scene.camera = camera
     else:
-        gcode_file = config.current_directory + "qr.gcode"
-        prusa_config = config.current_directory + "prusa_slicer_config.ini"
+        gcode_file = current_directory + "qr.gcode"
+        prusa_config = current_directory + "prusa_slicer_config.ini"
         generate_gcode(stl_file, gcode_file, prusa_config)
         insert_color_change(gcode_file, base_thickness + layer_height)
 
