@@ -99,22 +99,22 @@ def import_sd_card():
 
 def generate_qr_code(vertices, faces, pixels, size, protrusion_thickness, base_thickness, x_offset, y_offset):
 
+    vertices.extend([
+        [x_offset, y_offset, 0],
+        [x_offset + size, y_offset, 0],
+        [x_offset + size, y_offset + size, 0],
+        [x_offset, y_offset + size, 0],
+        [x_offset, y_offset, base_thickness],
+        [x_offset + size, y_offset, base_thickness],
+        [x_offset + size, y_offset + size, base_thickness],
+        [x_offset, y_offset + size, base_thickness]
+    ])
+    add_faces(faces, 0)
+
     height, width = pixels.shape
 
     x_scale = size / width
     y_scale = size / height
-
-    vertices.extend([
-        [x_offset, y_offset, 0],
-        [x_offset + width * x_scale, y_offset, 0],
-        [x_offset + width * x_scale, y_offset + height * y_scale, 0],
-        [x_offset, y_offset + height * y_scale, 0],
-        [x_offset, y_offset, base_thickness],
-        [x_offset + width * x_scale, y_offset, base_thickness],
-        [x_offset + width * x_scale, y_offset + height * y_scale, base_thickness],
-        [x_offset, y_offset + height * y_scale, base_thickness]
-    ])
-    add_faces(faces, 0)
 
     for y in range(height):
         for x in range(width):
