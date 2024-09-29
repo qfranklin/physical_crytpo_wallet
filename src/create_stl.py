@@ -4,6 +4,8 @@ from stl import mesh
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import math
 
+from scipy.spatial.transform import Rotation as R
+
 import config.config as config
 
 def rotate_stl(stl_file, angle_deg=270):
@@ -69,6 +71,27 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
+def import_sd_card():
+    # Load the SD card STL file once outside the loop
+    sd_card_mesh = mesh.Mesh.from_file(config.current_directory + 'sd_card_bottom.stl')
+    sd_card_vertices = sd_card_mesh.vectors.reshape(-1, 3)  # Extract vertices into a NumPy array
+    sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
+
+    # Rotate the sd card
+    rotation_angle = np.radians(270)
+    rotation_matrix = np.array([
+        [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
+        [np.sin(rotation_angle), np.cos(rotation_angle), 0],
+        [0, 0, 1]
+    ])
+    sd_card_vertices = sd_card_vertices @ rotation_matrix.T
+    # Move the sd card so the bottom left is aligned with the top left of the qr code and the z axis is zeroing and level
+    sd_card_vertices[:, 0] -= np.max(sd_card_vertices[:, 0]) 
+    sd_card_vertices[:, 1] -= np.min(sd_card_vertices[:, 1])
+    sd_card_vertices[:, 2] -= np.min(sd_card_vertices[:, 2])
+
+    return sd_card_vertices, sd_card_faces
+
 def qr_code():
 
     # These variables are in milimeters
@@ -78,6 +101,8 @@ def qr_code():
     base_thickness = layer_height * 5
     base_extension = 14
     space_between_qrs = 5
+
+    sd_card_vertices, sd_card_faces = import_sd_card()
 
     all_vertices = []
     all_faces = []
@@ -138,6 +163,8 @@ def qr_code():
                 add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
                 add_faces(faces, qr_idx)
 
+
+        '''
         # Add loop
         for y in range(15):
             for x in range(10):
@@ -149,6 +176,26 @@ def qr_code():
 
                 add_vertices(vertices, x + x_offset - 10, y + y_offset + ((desired_size - 15) / 2), 1, 1, 0, protrusion_thickness + base_thickness, 1, 1)
                 add_faces(faces, loop_idx)
+        #'''
+
+        # Add SD card model to this QR code
+        sd_offset_x = x_offset  # Adjust as needed for correct positioning
+        sd_offset_y = y_offset
+        sd_offset_z = 0 #base_thickness + protrusion_thickness  # Place on top of the baseplate
+
+        # Adjust the SD card vertices for its new position
+        sd_card_vertices_adjusted = sd_card_vertices.copy()
+        sd_card_vertices_adjusted[:, 0] += sd_offset_x  # X offset
+        sd_card_vertices_adjusted[:, 1] += sd_offset_y  # Y offset
+        sd_card_vertices_adjusted[:, 2] += sd_offset_z  # Z offset
+
+        current_vertex_offset = len(vertices)
+        vertices.extend(sd_card_vertices_adjusted.tolist())
+
+        # Adjust the SD card faces and add them to the QR code faces
+        for face in sd_card_faces:
+            adjusted_face = [f + current_vertex_offset for f in face]
+            faces.append(adjusted_face)
 
         extension_width = int(round(desired_size / x_scale, 0))
         extension_height = int(round(base_extension / y_scale, 0))
@@ -273,6 +320,40 @@ def qr_code():
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
 
-    rotate_stl(stl_file, 90)
+    
+
+
+
+
+
+
+
+    #rotate_stl(stl_file, 90)
 
     return round(base_thickness + layer_height, 2)
+
+
+def load_and_transform_stl(stl_file, translation=(0, 0, 0), rotation_degrees=(0, 0, 0)):
+    # Load the STL
+    sd_card_mesh = mesh.Mesh.from_file(stl_file)
+
+    # Apply translation
+    sd_card_mesh.translate(translation)
+
+    # Apply rotation
+    r = R.from_euler('xyz', rotation_degrees, degrees=True)
+    sd_card_mesh.rotate_using_matrix(r.as_matrix())
+
+    return sd_card_mesh
+
+def combine_stl(main_mesh, new_mesh):
+    # Combine the vertices of both meshes
+    combined_vectors = np.concatenate([main_mesh.vectors, new_mesh.vectors], axis=0)
+    
+    # Create the combined mesh with the combined vectors
+    combined_mesh = mesh.Mesh(np.zeros(combined_vectors.shape[0], dtype=mesh.Mesh.dtype))
+    
+    for i, vector in enumerate(combined_vectors):
+        combined_mesh.vectors[i] = vector
+
+    return combined_mesh

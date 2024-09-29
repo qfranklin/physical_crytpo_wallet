@@ -28,5 +28,10 @@ def main():
     # Import the STL file
     bpy.ops.import_mesh.stl(filepath=stl_file)
 
+    #sd_card_bottom_file = config.current_directory + 'sd_card_bottom.stl'
+
+    # Import the STL file
+    #bpy.ops.import_mesh.stl(filepath=sd_card_bottom_file)
+
 if __name__ == "__main__":
     main()
