@@ -97,6 +97,49 @@ def import_sd_card():
 
     return sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height
 
+def generate_qr_code(vertices, faces, pixels, size, protrusion_thickness, base_thickness, x_offset, y_offset):
+
+    height, width = pixels.shape
+
+    # Calculate scaling factors
+    x_scale = size / width
+    y_scale = size / height
+
+    # Add baseplate vertices and faces
+    # Add vertices for baseplate
+    add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, 0, base_thickness, width, height)
+    add_faces(faces, 0)
+
+    # Define QR code vertices and faces for each pixel
+    for y in range(height):
+        for x in range(width):
+            if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:  # Black pixels only (for QR code)
+                z = protrusion_thickness  # Set height for black pixels
+            else:
+                z = 0  # Set flat for white pixels
+
+            qr_idx = len(vertices)
+
+            # Add vertices for each QR cube
+            add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
+            add_faces(faces, qr_idx)
+
+def import_qr_code(text):
+    # Generate QR Code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=1,
+        border=5, # 4 units is the qr code standard, but add one to account for outline
+    )
+    qr.add_data(text)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill='black', back_color='white')
+    img = img.convert('L')  # Convert to grayscale
+    
+    return np.array(img)  # Get pixel qr_code_text as a numpy array
+    
 def qr_code():
 
     # These variables are in milimeters
@@ -117,27 +160,19 @@ def qr_code():
     grid_size = math.ceil(math.sqrt(total_qr_codes))
 
     # Loop over the list of public/private keys
-    for idx, data in enumerate(config.qr_code_text):
+    for idx, qr_code_text in enumerate(config.qr_code_text_array):
         # Determine row and column position for each QR code
         col = idx // grid_size
         row = idx % grid_size
         x_offset = col * (desired_size + base_extension + (space_between_qrs * idx))
         y_offset = row * (desired_size + (space_between_qrs * idx))
 
-        # Generate QR Code
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=1,
-            border=5, # 4 units is the qr code standard, but add one to account for outline
-        )
-        qr.add_data(data)
-        qr.make(fit=True)
+        vertices = []
+        faces = []
 
-        img = qr.make_image(fill='black', back_color='white')
-        img = img.convert('L')  # Convert to grayscale
-        pixels = np.array(img)  # Get pixel data as a numpy array
-        
+        pixels = import_qr_code(qr_code_text)
+        generate_qr_code(vertices, faces, pixels, desired_size, protrusion_thickness, base_extension, x_offset, y_offset)
+
         height, width = pixels.shape
 
         # Calculate scaling factors
@@ -223,7 +258,6 @@ def qr_code():
                 elif ((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1:
 
                     if (y + 1) == extension_width:
-                        #continue
                         vertices.extend([
                             [x * x_scale + desired_size, y * y_scale + y_offset, 0],
                             [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, 0],
