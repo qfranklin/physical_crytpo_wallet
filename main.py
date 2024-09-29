@@ -6,7 +6,7 @@ def main():
     gcode_target_thickness = create_stl.qr_code()
     gcode.generate_gcode()
     gcode.insert_color_change(gcode_target_thickness)
-    rear_side_template.create(45, 2, 14)
+    #rear_side_template.create(45, 2, 14)
 
 if __name__ == "__main__":
     main()
