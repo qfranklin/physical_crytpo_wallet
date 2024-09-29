@@ -118,11 +118,21 @@ def generate_qr_code(vertices, faces, pixels, size, protrusion_thickness, base_t
             else:
                 z = 0  # Set flat for white pixels
 
-            qr_idx = len(vertices)
+            idx = len(vertices)
 
             # Add vertices for each QR cube
-            add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
-            add_faces(faces, qr_idx)
+            vertices.extend([
+                [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness],
+                [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness],
+                [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, base_thickness],
+                [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
+                [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness + z],
+                [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness + z],
+                [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, base_thickness + z]
+            ])
+
+            add_faces(faces, idx)
 
 def import_qr_code(text):
     # Generate QR Code
