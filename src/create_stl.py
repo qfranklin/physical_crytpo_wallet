@@ -85,12 +85,17 @@ def import_sd_card():
         [0, 0, 1]
     ])
     sd_card_vertices = sd_card_vertices @ rotation_matrix.T
-    # Move the sd card so the bottom left is aligned with the top left of the qr code and the z axis is zeroing and level
-    sd_card_vertices[:, 0] -= np.max(sd_card_vertices[:, 0]) 
-    sd_card_vertices[:, 1] -= np.min(sd_card_vertices[:, 1])
-    sd_card_vertices[:, 2] -= np.min(sd_card_vertices[:, 2])
 
-    return sd_card_vertices, sd_card_faces
+    # Move the sd card so the bottom left is aligned with the top left of the qr code and the z axis is zeroed and level
+    sd_card_vertices[:, 0] -= np.max(sd_card_vertices[:, 0])  # Align bottom left corner with (0, 0)
+    sd_card_vertices[:, 1] -= np.min(sd_card_vertices[:, 1])  # Level the bottom of the SD card
+    sd_card_vertices[:, 2] -= np.min(sd_card_vertices[:, 2])  # Zero out the Z axis
+
+    # Calculate width and height
+    sd_card_width = np.max(sd_card_vertices[:, 0]) - np.min(sd_card_vertices[:, 0])
+    sd_card_height = np.max(sd_card_vertices[:, 1]) - np.min(sd_card_vertices[:, 1])
+
+    return sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height
 
 def qr_code():
 
@@ -102,7 +107,7 @@ def qr_code():
     base_extension = 14
     space_between_qrs = 5
 
-    sd_card_vertices, sd_card_faces = import_sd_card()
+    sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height = import_sd_card()
 
     all_vertices = []
     all_faces = []
@@ -162,21 +167,6 @@ def qr_code():
                 # Add vertices for each QR cube
                 add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
                 add_faces(faces, qr_idx)
-
-
-        '''
-        # Add loop
-        for y in range(15):
-            for x in range(10):
-
-                if(3 < y < 11 and x > 3):
-                    continue
-
-                loop_idx = len(vertices)
-
-                add_vertices(vertices, x + x_offset - 10, y + y_offset + ((desired_size - 15) / 2), 1, 1, 0, protrusion_thickness + base_thickness, 1, 1)
-                add_faces(faces, loop_idx)
-        #'''
 
         # Add SD card model to this QR code
         sd_offset_x = x_offset  # Adjust as needed for correct positioning
@@ -319,14 +309,6 @@ def qr_code():
 
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
-
-    
-
-
-
-
-
-
 
     #rotate_stl(stl_file, 90)
 
