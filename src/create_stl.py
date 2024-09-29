@@ -6,7 +6,25 @@ import math
 
 import config.config as config
 
+def rotate_stl(stl_file, angle_deg=270):
+    # Load the STL file
+    your_mesh = mesh.Mesh.from_file(stl_file)
 
+    # Convert the angle from degrees to radians
+    angle_rad = np.deg2rad(angle_deg)
+
+    # Rotation matrix for Z-axis rotation
+    rotation_matrix = np.array([
+        [np.cos(angle_rad), -np.sin(angle_rad), 0],
+        [np.sin(angle_rad),  np.cos(angle_rad), 0],
+        [0,                 0,                1]
+    ])
+
+    # Apply the rotation to each point in the mesh
+    your_mesh.vectors = np.dot(your_mesh.vectors, rotation_matrix)
+
+    # Save the rotated STL
+    your_mesh.save(stl_file)
 
 def add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, thickness, z, width, height):
     """
@@ -254,5 +272,7 @@ def qr_code():
 
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
+
+    rotate_stl(stl_file, 90)
 
     return round(base_thickness + layer_height, 2)
