@@ -171,7 +171,7 @@ def qr_code():
         faces = []
 
         pixels = import_qr_code(qr_code_text)
-        generate_qr_code(vertices, faces, pixels, desired_size, protrusion_thickness, base_extension, x_offset, y_offset)
+        generate_qr_code(vertices, faces, pixels, desired_size, protrusion_thickness, base_thickness, x_offset, y_offset)
 
         height, width = pixels.shape
 
@@ -179,29 +179,6 @@ def qr_code():
         x_scale = desired_size / width
         y_scale = desired_size / height
         z_scale = protrusion_thickness  # Extrusion height
-
-        # Prepare vertices and faces for STL
-        vertices = []
-        faces = []
-
-        # Add baseplate vertices and faces
-        # Add vertices for baseplate
-        add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, 0, base_thickness, width, height)
-        add_faces(faces, 0)
-
-        # Define QR code vertices and faces for each pixel
-        for y in range(height):
-            for x in range(width):
-                if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:  # Black pixels only (for QR code)
-                    z = z_scale  # Set height for black pixels
-                else:
-                    z = 0  # Set flat for white pixels
-
-                qr_idx = len(vertices)
-
-                # Add vertices for each QR cube
-                add_vertices(vertices, x * x_scale + x_offset, y * y_scale + y_offset, x_scale, y_scale, base_thickness, z, 1, 1)
-                add_faces(faces, qr_idx)
 
         # Add SD card model to this QR code
         sd_offset_x = x_offset  # Adjust as needed for correct positioning
