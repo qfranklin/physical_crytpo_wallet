@@ -101,26 +101,30 @@ def generate_qr_code(vertices, faces, pixels, size, protrusion_thickness, base_t
 
     height, width = pixels.shape
 
-    # Calculate scaling factors
     x_scale = size / width
     y_scale = size / height
 
-    # Add baseplate vertices and faces
-    # Add vertices for baseplate
-    add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, 0, base_thickness, width, height)
+    vertices.extend([
+        [x_offset, y_offset, 0],
+        [x_offset + width * x_scale, y_offset, 0],
+        [x_offset + width * x_scale, y_offset + height * y_scale, 0],
+        [x_offset, y_offset + height * y_scale, 0],
+        [x_offset, y_offset, base_thickness],
+        [x_offset + width * x_scale, y_offset, base_thickness],
+        [x_offset + width * x_scale, y_offset + height * y_scale, base_thickness],
+        [x_offset, y_offset + height * y_scale, base_thickness]
+    ])
     add_faces(faces, 0)
 
-    # Define QR code vertices and faces for each pixel
     for y in range(height):
         for x in range(width):
-            if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:  # Black pixels only (for QR code)
-                z = protrusion_thickness  # Set height for black pixels
+            if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:
+                z = protrusion_thickness
             else:
-                z = 0  # Set flat for white pixels
+                z = 0
 
             idx = len(vertices)
 
-            # Add vertices for each QR cube
             vertices.extend([
                 [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
                 [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness],
