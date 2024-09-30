@@ -13,7 +13,7 @@ desired_size = 45
 layer_height = 0.16
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 5
-base_extension = 14
+base_extension = 14.45
 space_between_qrs = 5
 all_vertices = []
 all_faces = []
@@ -160,7 +160,7 @@ def generate_baseplate(vertices, faces, width, x_scale, y_scale, y_offset):
     extension_height = int(round(base_extension / y_scale, 0))
 
     # Set this to extension_height and set the width to desired_size if not placing sd card in baseplate
-    adjacency_range = -1 #extension_height
+    adjacency_range = -2 #extension_height
 
     # Add the base extension
     for y in range(extension_width):
@@ -174,8 +174,8 @@ def generate_baseplate(vertices, faces, width, x_scale, y_scale, y_offset):
             else:
                 z = 0
 
-            if ((extension_height - 1 - x) + (extension_width - 1 - y)) < adjacency_range - 1:
-                continue
+            #if ((extension_height - 1 - x) + (extension_width - 1 - y)) < adjacency_range - 1:
+            #    continue
 
             qr_idx = len(vertices)
 
@@ -239,7 +239,6 @@ def generate_baseplate(vertices, faces, width, x_scale, y_scale, y_offset):
                 ])
             add_faces(faces, qr_idx)
 
-
 def generate_text(idx, vertices, faces, x_scale, y_scale):
     # Next section is for adding text to the bottom of the qr code. 
     font_size = 11
@@ -287,6 +286,7 @@ def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
 
+    print({sd_card_height})
     # Calculate grid layout dynamically
     total_qr_codes = len(config.qr_code_text)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
@@ -311,7 +311,9 @@ def qr_code():
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset, y_offset)
+        sd_card_x_offset = 59.34 #x_offset + desired_size + base_extension - 1.16
+        sd_card_y_offset = y_offset + desired_size - sd_card_width
+        generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
         baseplate_width = desired_size - sd_card_width
         generate_baseplate(vertices, faces, baseplate_width, x_scale, y_scale, y_offset)
