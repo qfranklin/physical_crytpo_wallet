@@ -250,9 +250,8 @@ def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offse
                 ])
             add_faces(faces, qr_idx)
 
-def generate_text(idx, vertices, faces, x_scale, y_scale):
-    # Next section is for adding text to the bottom of the qr code. 
-    font_size = 11
+def generate_text(vertices, faces, text, font_size, text_x_position, text_y_position, x_scale, y_scale):
+
     font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
     text_width = 500
@@ -261,11 +260,8 @@ def generate_text(idx, vertices, faces, x_scale, y_scale):
     
     text_draw = ImageDraw.Draw(text_image)
 
-    text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 6
-    text_y_position = desired_size + 1
-
     # Draw the text on the new larger image
-    text_draw.text((text_x_position, text_y_position), config.front_side_text[idx], fill=0, font=font)
+    text_draw.text((text_x_position, text_y_position), text, fill=0, font=font)
 
     # Correctly orient the image
     text_image = ImageOps.mirror(text_image)
@@ -332,7 +328,17 @@ def qr_code():
         print(f"{baseplate_x_scale} {baseplate_y_scale}")
         generate_extension(vertices, faces, baseplate_width, sd_card_height, baseplate_x_scale, baseplate_y_scale, desired_size, y_offset)
 
-        generate_text(idx, vertices, faces, x_scale, y_scale)
+        text = config.front_side_text[idx]
+        font_size = 11
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx)
+        text_y_position = desired_size + 2.5
+        generate_text(vertices, faces, text, font_size, text_x_position, text_y_position, x_scale, y_scale)
+
+        text = "eth"
+        font_size = 9
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 12
+        text_y_position = desired_size + 2.5
+        generate_text(vertices, faces, text, font_size, text_x_position, text_y_position, x_scale, y_scale)
         
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
