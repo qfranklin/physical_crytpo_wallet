@@ -153,7 +153,7 @@ def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset,
         adjusted_face = [f + current_vertex_offset for f in face]
         faces.append(adjusted_face)
 
-def generate_baseplate(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
+def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
 
     extension_baseplate_face_idx = len(vertices)
     vertices.extend([
@@ -182,7 +182,7 @@ def generate_baseplate(vertices, faces, width, height, x_scale, y_scale, x_offse
                 (x + 1) == extension_height or \
                 (y + 1) == extension_width or \
                 (((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1):
-                z = protrusion_thickness
+                z = 0
             else:
                 z = 0
 
@@ -330,7 +330,7 @@ def qr_code():
         baseplate_x_scale = 1.10708 #x_scale 
         baseplate_y_scale = 1.12 #y_scale
         print(f"{baseplate_x_scale} {baseplate_y_scale}")
-        generate_baseplate(vertices, faces, baseplate_width, sd_card_height, baseplate_x_scale, baseplate_y_scale, desired_size, y_offset)
+        generate_extension(vertices, faces, baseplate_width, sd_card_height, baseplate_x_scale, baseplate_y_scale, desired_size, y_offset)
 
         generate_text(idx, vertices, faces, x_scale, y_scale)
         
