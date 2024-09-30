@@ -61,7 +61,7 @@ def import_sd_card():
     sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
 
     # Rotate the sd card
-    rotation_angle = np.radians(270)
+    rotation_angle = np.radians(90)
     rotation_matrix = np.array([
         [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
         [np.sin(rotation_angle), np.cos(rotation_angle), 0],
@@ -312,7 +312,6 @@ def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
 
-    print({sd_card_height})
     # Calculate grid layout dynamically
     total_qr_codes = len(config.qr_code_text_array)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
@@ -349,13 +348,13 @@ def qr_code():
 
         text = config.front_side_text[idx]
         font_size = 11
-        text_x_position = (desired_size * idx) + (space_between_qrs * idx)
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 1
         text_y_position = desired_size + 2.5
         generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
 
         text = "eth"
         font_size = 9
-        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 12
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 12.4
         text_y_position = desired_size + 3
         generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
         
