@@ -8,6 +8,16 @@ from scipy.spatial.transform import Rotation as R
 
 import config.config as config
 
+# These variables are in milimeters
+desired_size = 45
+layer_height = 0.16
+protrusion_thickness = layer_height * 2
+base_thickness = layer_height * 5
+base_extension = 14
+space_between_qrs = 5
+all_vertices = []
+all_faces = []
+
 def rotate_stl(stl_file, angle_deg=270):
     # Load the STL file
     your_mesh = mesh.Mesh.from_file(stl_file)
@@ -71,24 +81,24 @@ def import_sd_card():
 
     return sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height
 
-def generate_qr_code(vertices, faces, pixels, size, protrusion_thickness, base_thickness, x_offset, y_offset):
+def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
 
     vertices.extend([
         [x_offset, y_offset, 0],
-        [x_offset + size, y_offset, 0],
-        [x_offset + size, y_offset + size, 0],
-        [x_offset, y_offset + size, 0],
+        [x_offset + desired_size, y_offset, 0],
+        [x_offset + desired_size, y_offset + desired_size, 0],
+        [x_offset, y_offset + desired_size, 0],
         [x_offset, y_offset, base_thickness],
-        [x_offset + size, y_offset, base_thickness],
-        [x_offset + size, y_offset + size, base_thickness],
-        [x_offset, y_offset + size, base_thickness]
+        [x_offset + desired_size, y_offset, base_thickness],
+        [x_offset + desired_size, y_offset + desired_size, base_thickness],
+        [x_offset, y_offset + desired_size, base_thickness]
     ])
     add_faces(faces, 0)
 
     height, width = pixels.shape
 
-    x_scale = size / width
-    y_scale = size / height
+    x_scale = desired_size / width
+    y_scale = desired_size / height
 
     for y in range(height):
         for x in range(width):
@@ -128,20 +138,30 @@ def import_qr_code(text):
     
     return np.array(img)  # Get pixel qr_code_text as a numpy array
     
+def generate_sd_card():
+    
+    # Add SD card model to this QR code
+    sd_offset_x = x_offset  # Adjust as needed for correct positioning
+    sd_offset_y = y_offset
+    sd_offset_z = 0 #base_thickness + protrusion_thickness  # Place on top of the baseplate
+
+    # Adjust the SD card vertices for its new position
+    sd_card_vertices_adjusted = sd_card_vertices.copy()
+    sd_card_vertices_adjusted[:, 0] += sd_offset_x  # X offset
+    sd_card_vertices_adjusted[:, 1] += sd_offset_y  # Y offset
+    sd_card_vertices_adjusted[:, 2] += sd_offset_z  # Z offset
+
+    current_vertex_offset = len(vertices)
+    vertices.extend(sd_card_vertices_adjusted.tolist())
+
+    # Adjust the SD card faces and add them to the QR code faces
+    for face in sd_card_faces:
+        adjusted_face = [f + current_vertex_offset for f in face]
+        faces.append(adjusted_face)
+
 def qr_code():
 
-    # These variables are in milimeters
-    desired_size = 45
-    layer_height = 0.16
-    protrusion_thickness = layer_height * 2
-    base_thickness = layer_height * 5
-    base_extension = 14
-    space_between_qrs = 5
-
     sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height = import_sd_card()
-
-    all_vertices = []
-    all_faces = []
 
     # Calculate grid layout dynamically
     total_qr_codes = len(config.qr_code_text)
@@ -159,7 +179,7 @@ def qr_code():
         faces = []
 
         pixels = import_qr_code(qr_code_text)
-        generate_qr_code(vertices, faces, pixels, desired_size, protrusion_thickness, base_thickness, x_offset, y_offset)
+        generate_qr_code(vertices, faces, pixels, x_offset, y_offset)
 
         height, width = pixels.shape
 
@@ -315,14 +335,14 @@ def qr_code():
         all_faces.extend([[f[0] + current_vertex_offset, f[1] + current_vertex_offset, f[2] + current_vertex_offset] for f in faces])
 
     # Convert lists to numpy arrays for STL creation
-    all_vertices = np.array(all_vertices)
-    all_faces = np.array(all_faces)
+    converted_vertices = np.array(all_vertices)
+    converted_faces = np.array(all_faces)
 
     # Create STL mesh and save
-    qr_mesh = mesh.Mesh(np.zeros(all_faces.shape[0], dtype=mesh.Mesh.dtype))
-    for i, face in enumerate(all_faces):
+    qr_mesh = mesh.Mesh(np.zeros(converted_faces.shape[0], dtype=mesh.Mesh.dtype))
+    for i, face in enumerate(converted_faces):
         for j in range(3):
-            qr_mesh.vectors[i][j] = all_vertices[face[j], :]
+            qr_mesh.vectors[i][j] = converted_vertices[face[j], :]
 
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
