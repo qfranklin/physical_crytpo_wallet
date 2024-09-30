@@ -154,11 +154,13 @@ def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset,
         adjusted_face = [f + current_vertex_offset for f in face]
         faces.append(adjusted_face)
 
-def generate_baseplate(vertices, faces, x_scale, y_scale, y_offset):
+def generate_baseplate(vertices, faces, width, x_scale, y_scale, y_offset):
 
-    extension_width = int(round(desired_size / x_scale, 0))
+    extension_width = int(round(width / x_scale, 0))
     extension_height = int(round(base_extension / y_scale, 0))
-    adjacency_range = extension_height
+
+    # Set this to extension_height and set the width to desired_size if not placing sd card in baseplate
+    adjacency_range = -1 #extension_height
 
     # Add the base extension
     for y in range(extension_width):
@@ -283,7 +285,7 @@ def generate_text(idx, vertices, faces, x_scale, y_scale):
 
 def qr_code():
 
-    sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height = import_sd_card()
+    sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
 
     # Calculate grid layout dynamically
     total_qr_codes = len(config.qr_code_text)
@@ -311,7 +313,8 @@ def qr_code():
 
         generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset, y_offset)
 
-        generate_baseplate(vertices, faces, x_scale, y_scale, y_offset)
+        baseplate_width = desired_size - sd_card_width
+        generate_baseplate(vertices, faces, baseplate_width, x_scale, y_scale, y_offset)
 
         generate_text(idx, vertices, faces, x_scale, y_scale)
         
