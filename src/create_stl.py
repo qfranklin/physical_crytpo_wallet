@@ -250,7 +250,7 @@ def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offse
                 ])
             add_faces(faces, qr_idx)
 
-def generate_text(vertices, faces, text, font_size, text_x_position, text_y_position, x_scale, y_scale):
+def generate_text(vertices, faces, text, font_size, character_spacing, text_x_position, text_y_position, x_scale, y_scale):
 
     font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
@@ -260,8 +260,27 @@ def generate_text(vertices, faces, text, font_size, text_x_position, text_y_posi
     
     text_draw = ImageDraw.Draw(text_image)
 
+
+
+
+    x_offset = text_x_position
+    for char in text:
+        # Get the size of the current character using textbbox
+        char_bbox = text_draw.textbbox((0, 0), char, font=font)
+        char_width = char_bbox[2] - char_bbox[0]
+        char_height = char_bbox[3] - char_bbox[1]
+        
+        # Draw the character at the current x_offset position
+        text_draw.text((x_offset, text_y_position), char, fill=0, font=font)
+        
+        # Update the x_offset for the next character, adding spacing
+        x_offset += char_width + character_spacing
+
+
+
+
     # Draw the text on the new larger image
-    text_draw.text((text_x_position, text_y_position), text, fill=0, font=font)
+    #text_draw.text((text_x_position, text_y_position), text, fill=0, font=font)
 
     # Correctly orient the image
     text_image = ImageOps.mirror(text_image)
@@ -332,13 +351,13 @@ def qr_code():
         font_size = 11
         text_x_position = (desired_size * idx) + (space_between_qrs * idx)
         text_y_position = desired_size + 2.5
-        generate_text(vertices, faces, text, font_size, text_x_position, text_y_position, x_scale, y_scale)
+        generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
 
         text = "eth"
         font_size = 9
         text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 12
-        text_y_position = desired_size + 2.5
-        generate_text(vertices, faces, text, font_size, text_x_position, text_y_position, x_scale, y_scale)
+        text_y_position = desired_size + 3
+        generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
         
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
