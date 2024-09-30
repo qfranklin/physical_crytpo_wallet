@@ -28,32 +28,6 @@ def rotate_stl(stl_file, angle_deg=270):
     # Save the rotated STL
     your_mesh.save(stl_file)
 
-def add_vertices(vertices, x_offset, y_offset, x_scale, y_scale, thickness, z, width, height):
-    """
-    Adds vertices to create a cube.
-    
-    Arguments:
-    - vertices: list to which the new vertices will be added.
-    - x_offset: the X-coordinate offset for positioning.
-    - y_offset: the Y-coordinate offset for positioning.
-    - x_scale: scaling factor for the X dimension.
-    - y_scale: scaling factor for the Y dimension.
-    - thickness: thickness of the object.
-    - z: the additional height (thickness) on top of the base (default is 0 for a flat plate).
-    - width: the width in terms of the number of grid units for the object (default is 1).
-    - height: the height in terms of the number of grid units for the object (default is 1).
-    """
-    vertices.extend([
-        [x_offset, y_offset, thickness],  # Bottom-left
-        [x_offset + width * x_scale, y_offset, thickness],  # Bottom-right
-        [x_offset + width * x_scale, y_offset + height * y_scale, thickness],  # Top-right
-        [x_offset, y_offset + height * y_scale, thickness],  # Top-left
-        [x_offset, y_offset, thickness + z],  # Bottom-left (raised)
-        [x_offset + width * x_scale, y_offset, thickness + z],  # Bottom-right (raised)
-        [x_offset + width * x_scale, y_offset + height * y_scale, thickness + z],  # Top-right (raised)
-        [x_offset, y_offset + height * y_scale, thickness + z]  # Top-left (raised)
-    ])
-
 def add_faces(faces, start_idx):
     """
     Adds the faces for a cube (or rectangular prism) to the face list.
@@ -282,8 +256,16 @@ def qr_code():
                             [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                         ])
                 else:
-                    add_vertices(vertices, x * x_scale + desired_size, y * y_scale + y_offset, x_scale, y_scale, 0, base_thickness + z, 1, 1)
-        
+                    vertices.extend([
+                        [x * x_scale + desired_size, y * y_scale + y_offset, 0],
+                        [x * x_scale + desired_size + 1 * x_scale, y * y_scale + y_offset, 0],
+                        [x * x_scale + desired_size + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, 0],
+                        [x * x_scale + desired_size, y * y_scale + y_offset + 1 * y_scale, 0],
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                        [x * x_scale + desired_size + 1 * x_scale, y * y_scale + y_offset, base_thickness + z],
+                        [x * x_scale + desired_size + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness + z],
+                        [x * x_scale + desired_size, y * y_scale + y_offset + 1 * y_scale, base_thickness + z]
+                    ])
                 add_faces(faces, qr_idx)
 
         # Next section is for adding text to the bottom of the qr code. 
@@ -315,7 +297,17 @@ def qr_code():
                 if text_pixels[x, y] < 128:  # Black pixels = protruding areas
                     text_idx = len(vertices)
 
-                    add_vertices(vertices, x, y, 1, 1, base_thickness, z_scale, 1, 1)
+                    vertices.extend([
+                        [x, y, base_thickness],
+                        [x + 1 * x_scale, y, base_thickness],
+                        [x + 1 * x_scale, y + 1 * y_scale, base_thickness],
+                        [x, y + 1 * y_scale, base_thickness],
+                        [x, y, base_thickness + z],
+                        [x + 1 * x_scale, y, base_thickness + z],
+                        [x + 1 * x_scale, y + 1 * y_scale, base_thickness + z],
+                        [x, y + 1 * y_scale, base_thickness + z]
+                    ])
+
                     add_faces(faces, text_idx)
 
         current_vertex_offset = len(all_vertices)
