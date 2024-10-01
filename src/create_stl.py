@@ -136,76 +136,83 @@ def generate_base(vertices, faces, width, height, x_offset, y_offset):
     ])
     add_faces(faces, idx)
 
-def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset, angled_corner=0, adjacency_range=-2):
+def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
     
     width = int(round(width / x_scale, 0))
     height = int(round(height / y_scale, 0))
 
+    # Set this to height and set the width to desired_size if not placing sd card in baseplate
+    adjacency_range = -2 #height
+
+    # Add the base extension
     for y in range(width):
         for x in range(height):
-            # Check adjacency logic
+
+            if y == 0 or \
+                (x + 1) == height or \
+                (y + 1) == width or \
+                (((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1):
+                z = 0
+            else:
+                z = 0
+
             if ((height - 1 - x) + (width - 1 - y)) < adjacency_range - 1:
                 continue
 
             qr_idx = len(vertices)
-            z = 0 if (y == 0 or (x + 1) == height or (y + 1) == width or ((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1) else 0
 
-            # Angled corner handling
-            if angled_corner and (x == 0 and y == 0):  # Top-left corner, customize this for other corners
-                # Adjust the vertices for an angled corner
+            if ((height - 1 - x) + (width - 1 - y)) == adjacency_range:
+                # This will make the edge cubes have a 45 degreee edge.
                 vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, 0],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, 0],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
-                    [(x + 0.5) * x_scale + x_offset, (y + 0.5) * y_scale + y_offset, 0],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z],
-                    [(x + 0.5) * x_scale + x_offset, (y + 0.5) * y_scale + y_offset, base_thickness + z]
-                ])
-            elif ((height - 1 - x) + (width - 1 - y)) == adjacency_range:
-                # Edge cubes with 45-degree edge
-                vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, 0],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, 0],
-                    [(x + 0.5) * x_scale + x_offset, (y + 0.5) * y_scale + y_offset, 0],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 0.5) * x_scale + x_offset, (y + 0.5) * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z]
+                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                    [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                    [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
+                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                 ])
             elif ((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1:
-                # Adjusted logic for angled edges
                 if (y + 1) == width:
                     vertices.extend([
-                        [x * x_scale + x_offset, y * y_scale + y_offset, 0],
-                        [(x + 1.5) * x_scale + x_offset, y * y_scale + y_offset, 0],
-                        [(x + 0.5) * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
-                        [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
-                        [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1.5) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 0.5) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z]
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
+                    ])
+                elif (x + 1) == height: 
+                    vertices.extend([
+                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness],
+                        [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
+                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness + z],
+                        [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
+                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                     ])
                 else:
                     vertices.extend([
-                        [x * x_scale + x_offset, y * y_scale + y_offset, 0],
-                        [(x + 1.5) * x_scale + x_offset, y * y_scale + y_offset, 0],
-                        [(x + 0.5) * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
-                        [(x - 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
-                        [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1.5) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 0.5) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [(x - 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + z]
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
+                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
+                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
+                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
+                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                     ])
             else:
-                # Default vertices without angled edges
                 vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, 0],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, 0],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, 0],
-                    [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, 0],
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness],
+                    [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, base_thickness],
                     [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
                     [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness + z],
                     [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness + z],
@@ -289,14 +296,14 @@ def qr_code():
 
         qr_code_x_offset = x_offset + sd_card_width
         pixels = import_qr_code(qr_code_text)
-        #generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
+        generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
 
         height, width = pixels.shape
         # Calculate scaling factors
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        generate_angled_base(vertices, faces, desired_size, desired_size, x_scale, y_scale, qr_code_x_offset, y_offset)
+        generate_base(vertices, faces, desired_size, desired_size, qr_code_x_offset, y_offset)
 
         sd_card_x_offset = x_offset + sd_card_height + sd_card_width
         sd_card_y_offset = y_offset + desired_size
@@ -308,13 +315,13 @@ def qr_code():
         baseplate_y_offset = desired_size
         baseplate_x_scale = 1.10708 #x_scale 
         baseplate_y_scale = 1.12 #y_scale
-        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        #generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
         font_size = 11
         text_x_position = (desired_size * (idx + 1)) + (space_between_qrs * idx) + 1
         text_y_position = sd_card_height + sd_card_width + 7
-        generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
+        #generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
 
         baseplate_width = desired_size + sd_card_width
         baseplate_height = sd_card_width
@@ -322,14 +329,14 @@ def qr_code():
         baseplate_y_offset = y_offset
         baseplate_x_scale = x_scale 
         baseplate_y_scale = y_scale
-        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        #generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
 
 
         text = config.front_top_text[idx]
         font_size = 10
         text_x_position = 1.5
         text_y_position = 2
-        generate_text(vertices, faces, text, font_size, .2, text_x_position, text_y_position, x_scale, y_scale)
+        #generate_text(vertices, faces, text, font_size, .2, text_x_position, text_y_position, x_scale, y_scale)
 
 
         current_vertex_offset = len(all_vertices)
