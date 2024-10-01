@@ -62,18 +62,6 @@ def import_sd_card():
 
 def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
 
-    vertices.extend([
-        [x_offset, y_offset, 0],
-        [x_offset + desired_size, y_offset, 0],
-        [x_offset + desired_size, y_offset + desired_size, 0],
-        [x_offset, y_offset + desired_size, 0],
-        [x_offset, y_offset, base_thickness],
-        [x_offset + desired_size, y_offset, base_thickness],
-        [x_offset + desired_size, y_offset + desired_size, base_thickness],
-        [x_offset, y_offset + desired_size, base_thickness]
-    ])
-    add_faces(faces, 0)
-
     height, width = pixels.shape
 
     x_scale = desired_size / width
@@ -133,9 +121,9 @@ def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset,
         adjusted_face = [f + current_vertex_offset for f in face]
         faces.append(adjusted_face)
 
-def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
+def generate_base(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
 
-    extension_baseplate_face_idx = len(vertices)
+    idx = len(vertices)
     vertices.extend([
         [x_offset, y_offset, 0],
         [x_offset + height, y_offset, 0],
@@ -146,32 +134,32 @@ def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offse
         [x_offset + height, y_offset + width, base_thickness],
         [x_offset, y_offset + width, base_thickness]
     ])
-    add_faces(faces, extension_baseplate_face_idx)
+    add_faces(faces, idx)
 
-    extension_width = int(round(width / x_scale, 0))
-    extension_height = int(round(height / y_scale, 0))
+    width = int(round(width / x_scale, 0))
+    height = int(round(height / y_scale, 0))
 
-    # Set this to extension_height and set the width to desired_size if not placing sd card in baseplate
-    adjacency_range = -2 #extension_height
+    # Set this to height and set the width to desired_size if not placing sd card in baseplate
+    adjacency_range = -2 #height
 
     # Add the base extension
-    for y in range(extension_width):
-        for x in range(extension_height):
+    for y in range(width):
+        for x in range(height):
 
             if y == 0 or \
-                (x + 1) == extension_height or \
-                (y + 1) == extension_width or \
-                (((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1):
+                (x + 1) == height or \
+                (y + 1) == width or \
+                (((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1):
                 z = 0
             else:
                 z = 0
 
-            if ((extension_height - 1 - x) + (extension_width - 1 - y)) < adjacency_range - 1:
+            if ((height - 1 - x) + (width - 1 - y)) < adjacency_range - 1:
                 continue
 
             qr_idx = len(vertices)
 
-            if ((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range:
+            if ((height - 1 - x) + (width - 1 - y)) == adjacency_range:
                 # This will make the edge cubes have a 45 degreee edge.
                 vertices.extend([
                     [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
@@ -183,8 +171,8 @@ def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offse
                     [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
                     [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                 ])
-            elif ((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1:
-                if (y + 1) == extension_width:
+            elif ((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1:
+                if (y + 1) == width:
                     vertices.extend([
                         [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
                         [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
@@ -195,7 +183,7 @@ def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offse
                         [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
                         [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
                     ])
-                elif (x + 1) == extension_height: 
+                elif (x + 1) == height: 
                     vertices.extend([
                         [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness],
                         [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
@@ -239,9 +227,6 @@ def generate_text(vertices, faces, text, font_size, character_spacing, text_x_po
     text_image = Image.new('L', (text_width, text_height), color=255)
     
     text_draw = ImageDraw.Draw(text_image)
-
-
-
 
     x_offset = text_x_position
     for char in text:
@@ -307,37 +292,51 @@ def qr_code():
         vertices = []
         faces = []
 
+        qr_code_x_offset = x_offset + sd_card_width
         pixels = import_qr_code(qr_code_text)
-        generate_qr_code(vertices, faces, pixels, x_offset, y_offset)
+        generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
 
         height, width = pixels.shape
-
         # Calculate scaling factors
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        sd_card_x_offset = x_offset + sd_card_height
+        generate_base(vertices, faces, desired_size, desired_size, x_scale, y_scale, qr_code_x_offset, y_offset)
+
+        sd_card_x_offset = x_offset + sd_card_height + sd_card_width
         sd_card_y_offset = y_offset + desired_size
         generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
-        baseplate_width = desired_size - sd_card_width
+        baseplate_width = sd_card_width
+        baseplate_height = desired_size - sd_card_height
+        baseplate_x_offset = sd_card_height + sd_card_width
+        baseplate_y_offset = desired_size
         baseplate_x_scale = 1.10708 #x_scale 
         baseplate_y_scale = 1.12 #y_scale
-        print(f"{baseplate_x_scale} {baseplate_y_scale}")
-        generate_extension(vertices, faces, baseplate_width, sd_card_height, baseplate_x_scale, baseplate_y_scale, desired_size, y_offset)
+        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
-        text = config.front_side_text[idx]
+        text = config.front_right_text[idx]
         font_size = 11
-        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 1
-        text_y_position = desired_size + 2.5
+        text_x_position = (desired_size * (idx + 1)) + (space_between_qrs * idx) + 1
+        text_y_position = sd_card_height + sd_card_width + 7
         generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
 
-        text = "eth"
-        font_size = 9
-        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 12.4
-        text_y_position = desired_size + 3
-        generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
-        
+        baseplate_width = desired_size + sd_card_width
+        baseplate_height = sd_card_width
+        baseplate_x_offset = 0
+        baseplate_y_offset = y_offset
+        baseplate_x_scale = x_scale 
+        baseplate_y_scale = y_scale
+        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+
+
+        text = config.front_top_text[idx]
+        font_size = 10
+        text_x_position = 1.5
+        text_y_position = 2
+        generate_text(vertices, faces, text, font_size, .2, text_x_position, text_y_position, x_scale, y_scale)
+
+
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
         all_faces.extend([[f[0] + current_vertex_offset, f[1] + current_vertex_offset, f[2] + current_vertex_offset] for f in faces])
