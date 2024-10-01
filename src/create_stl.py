@@ -61,7 +61,7 @@ def import_sd_card():
     sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
 
     # Rotate the sd card
-    rotation_angle = np.radians(270)
+    rotation_angle = np.radians(90)
     rotation_matrix = np.array([
         [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
         [np.sin(rotation_angle), np.cos(rotation_angle), 0],
@@ -153,7 +153,7 @@ def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset,
         adjusted_face = [f + current_vertex_offset for f in face]
         faces.append(adjusted_face)
 
-def generate_baseplate(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
+def generate_extension(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
 
     extension_baseplate_face_idx = len(vertices)
     vertices.extend([
@@ -182,7 +182,7 @@ def generate_baseplate(vertices, faces, width, height, x_scale, y_scale, x_offse
                 (x + 1) == extension_height or \
                 (y + 1) == extension_width or \
                 (((extension_height - 1 - x) + (extension_width - 1 - y)) == adjacency_range - 1):
-                z = protrusion_thickness
+                z = 0
             else:
                 z = 0
 
@@ -250,9 +250,8 @@ def generate_baseplate(vertices, faces, width, height, x_scale, y_scale, x_offse
                 ])
             add_faces(faces, qr_idx)
 
-def generate_text(idx, vertices, faces, x_scale, y_scale):
-    # Next section is for adding text to the bottom of the qr code. 
-    font_size = 11
+def generate_text(vertices, faces, text, font_size, character_spacing, text_x_position, text_y_position, x_scale, y_scale):
+
     font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
     text_width = 500
@@ -261,11 +260,27 @@ def generate_text(idx, vertices, faces, x_scale, y_scale):
     
     text_draw = ImageDraw.Draw(text_image)
 
-    text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 6
-    text_y_position = desired_size + 1
+
+
+
+    x_offset = text_x_position
+    for char in text:
+        # Get the size of the current character using textbbox
+        char_bbox = text_draw.textbbox((0, 0), char, font=font)
+        char_width = char_bbox[2] - char_bbox[0]
+        char_height = char_bbox[3] - char_bbox[1]
+        
+        # Draw the character at the current x_offset position
+        text_draw.text((x_offset, text_y_position), char, fill=0, font=font)
+        
+        # Update the x_offset for the next character, adding spacing
+        x_offset += char_width + character_spacing
+
+
+
 
     # Draw the text on the new larger image
-    text_draw.text((text_x_position, text_y_position), config.front_side_text[idx], fill=0, font=font)
+    #text_draw.text((text_x_position, text_y_position), text, fill=0, font=font)
 
     # Correctly orient the image
     text_image = ImageOps.mirror(text_image)
@@ -297,7 +312,6 @@ def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
 
-    print({sd_card_height})
     # Calculate grid layout dynamically
     total_qr_codes = len(config.qr_code_text_array)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
@@ -330,9 +344,19 @@ def qr_code():
         baseplate_x_scale = 1.10708 #x_scale 
         baseplate_y_scale = 1.12 #y_scale
         print(f"{baseplate_x_scale} {baseplate_y_scale}")
-        generate_baseplate(vertices, faces, baseplate_width, sd_card_height, baseplate_x_scale, baseplate_y_scale, desired_size, y_offset)
+        generate_extension(vertices, faces, baseplate_width, sd_card_height, baseplate_x_scale, baseplate_y_scale, desired_size, y_offset)
 
-        generate_text(idx, vertices, faces, x_scale, y_scale)
+        text = config.front_side_text[idx]
+        font_size = 11
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 1
+        text_y_position = desired_size + 2.5
+        generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
+
+        text = "eth"
+        font_size = 9
+        text_x_position = (desired_size * idx) + (space_between_qrs * idx) + 12.4
+        text_y_position = desired_size + 3
+        generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
         
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
