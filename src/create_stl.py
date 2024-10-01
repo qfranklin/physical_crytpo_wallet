@@ -17,26 +17,6 @@ space_between_qrs = 5
 all_vertices = []
 all_faces = []
 
-def rotate_stl(stl_file, angle_deg=270):
-    # Load the STL file
-    your_mesh = mesh.Mesh.from_file(stl_file)
-
-    # Convert the angle from degrees to radians
-    angle_rad = np.deg2rad(angle_deg)
-
-    # Rotation matrix for Z-axis rotation
-    rotation_matrix = np.array([
-        [np.cos(angle_rad), -np.sin(angle_rad), 0],
-        [np.sin(angle_rad),  np.cos(angle_rad), 0],
-        [0,                 0,                1]
-    ])
-
-    # Apply the rotation to each point in the mesh
-    your_mesh.vectors = np.dot(your_mesh.vectors, rotation_matrix)
-
-    # Save the rotated STL
-    your_mesh.save(stl_file)
-
 def add_faces(faces, start_idx):
     """
     Adds the faces for a cube (or rectangular prism) to the face list.
@@ -61,7 +41,7 @@ def import_sd_card():
     sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
 
     # Rotate the sd card
-    rotation_angle = np.radians(90)
+    rotation_angle = np.radians(180)
     rotation_matrix = np.array([
         [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
         [np.sin(rotation_angle), np.cos(rotation_angle), 0],
@@ -336,8 +316,8 @@ def qr_code():
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        sd_card_x_offset = x_offset + desired_size + sd_card_height
-        sd_card_y_offset = y_offset + desired_size - sd_card_width
+        sd_card_x_offset = x_offset + sd_card_height
+        sd_card_y_offset = y_offset + desired_size
         generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
         baseplate_width = desired_size - sd_card_width
@@ -374,8 +354,6 @@ def qr_code():
 
     stl_file = config.current_directory + 'qr.stl'
     qr_mesh.save(rf'{stl_file}')
-
-    #rotate_stl(stl_file, 90)
 
     return round(base_thickness + layer_height, 2)
 
