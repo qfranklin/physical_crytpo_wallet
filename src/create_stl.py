@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 45
+desired_size = 30
 layer_height = 0.16
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 5
@@ -69,7 +69,7 @@ def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
 
     for y in range(height):
         for x in range(width):
-            if pixels[y, x] < 128 or x == 0 or y == 0 or (x + 1) == width or (y + 1) == height:
+            if pixels[y, x] < 128:
                 z = protrusion_thickness
             else:
                 z = 0
@@ -135,6 +135,40 @@ def generate_base(vertices, faces, width, height, x_offset, y_offset):
         [x_offset, y_offset + width, base_thickness]
     ])
     add_faces(faces, idx)
+
+def generate_outline(vertices, faces, sides, width, height, x_scale, y_scale, x_offset, y_offset):
+
+    for y in range(width):
+        for x in range(height):
+            # Check for sides and add outline accordingly
+            add_outline = False
+
+            if sides[0] == 1 and x == 0:  # Top side
+                add_outline = True
+            elif sides[1] == 1 and (y + 1) == width:  # Right side
+                add_outline = True
+            elif sides[2] == 1 and (x + 1) == height:  # Bottom side
+                add_outline = True
+            elif sides[3] == 1 and y == 0:  # Left side
+                add_outline = True
+
+            if add_outline:
+                idx = len(vertices)
+
+                # Add the vertices for the outline
+                vertices.extend([
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + protrusion_thickness],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + protrusion_thickness],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + protrusion_thickness],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + protrusion_thickness]
+                ])
+
+                # Add the faces for this outline section
+                add_faces(faces, idx)
 
 def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
     
@@ -220,7 +254,7 @@ def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_off
                 ])
             add_faces(faces, qr_idx)
 
-def generate_text(vertices, faces, text, font_size, character_spacing, text_x_position, text_y_position, x_scale, y_scale):
+def generate_text(vertices, faces, text, font_size, character_spacing, text_x_position, text_y_position):
 
     font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
 
@@ -243,9 +277,6 @@ def generate_text(vertices, faces, text, font_size, character_spacing, text_x_po
         # Update the x_offset for the next character, adding spacing
         x_offset += char_width + character_spacing
 
-
-
-
     # Draw the text on the new larger image
     #text_draw.text((text_x_position, text_y_position), text, fill=0, font=font)
 
@@ -264,13 +295,13 @@ def generate_text(vertices, faces, text, font_size, character_spacing, text_x_po
 
                 vertices.extend([
                     [x, y, base_thickness],
-                    [x + 1 * x_scale, y, base_thickness],
-                    [x + 1 * x_scale, y + 1 * y_scale, base_thickness],
-                    [x, y + 1 * y_scale, base_thickness],
+                    [x + 1, y, base_thickness],
+                    [x + 1, y + 1, base_thickness],
+                    [x, y + 1, base_thickness],
                     [x, y, base_thickness + protrusion_thickness],
-                    [x + 1 * x_scale, y, base_thickness + protrusion_thickness],
-                    [x + 1 * x_scale, y + 1 * y_scale, base_thickness + protrusion_thickness],
-                    [x, y + 1 * y_scale, base_thickness + protrusion_thickness]
+                    [x + 1, y, base_thickness + protrusion_thickness],
+                    [x + 1, y + 1, base_thickness + protrusion_thickness],
+                    [x, y + 1, base_thickness + protrusion_thickness]
                 ])
 
                 add_faces(faces, text_idx)
@@ -304,6 +335,7 @@ def qr_code():
         y_scale = desired_size / height
 
         generate_base(vertices, faces, desired_size, desired_size, qr_code_x_offset, y_offset)
+        generate_outline(vertices, faces, [1,1,1,1], width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
 
         sd_card_x_offset = x_offset + sd_card_height + sd_card_width
         sd_card_y_offset = y_offset + desired_size
@@ -313,30 +345,32 @@ def qr_code():
         baseplate_height = desired_size - sd_card_height
         baseplate_x_offset = sd_card_height + sd_card_width
         baseplate_y_offset = desired_size
-        baseplate_x_scale = 1.10708 #x_scale 
-        baseplate_y_scale = 1.12 #y_scale
-        #generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        baseplate_x_scale = baseplate_width / round(baseplate_width)
+        baseplate_y_scale = baseplate_height / round(baseplate_height)
+        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        generate_outline(vertices, faces, [0,1,1,0], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
         font_size = 11
         text_x_position = (desired_size * (idx + 1)) + (space_between_qrs * idx) + 1
         text_y_position = sd_card_height + sd_card_width + 7
-        #generate_text(vertices, faces, text, font_size, -1, text_x_position, text_y_position, x_scale, y_scale)
+        generate_text(vertices, faces, text, font_size, 0, text_x_position, text_y_position)
 
         baseplate_width = desired_size + sd_card_width
         baseplate_height = sd_card_width
         baseplate_x_offset = 0
         baseplate_y_offset = y_offset
-        baseplate_x_scale = x_scale 
-        baseplate_y_scale = y_scale
-        #generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        baseplate_x_scale = baseplate_width / round(baseplate_width)
+        baseplate_y_scale = baseplate_height / round(baseplate_height)
+        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        generate_outline(vertices, faces, [1,1,0,1], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
 
         text = config.front_top_text[idx]
         font_size = 10
         text_x_position = 1.5
         text_y_position = 2
-        #generate_text(vertices, faces, text, font_size, .2, text_x_position, text_y_position, x_scale, y_scale)
+        generate_text(vertices, faces, text, font_size, .2, text_x_position, text_y_position)
 
 
         current_vertex_offset = len(all_vertices)
