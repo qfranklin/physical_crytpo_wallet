@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 30
+desired_size = 45
 layer_height = 0.16
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 5
@@ -254,54 +254,71 @@ def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_off
                 ])
             add_faces(faces, qr_idx)
 
-def generate_text(vertices, faces, text, font_size, character_spacing, text_x_position, text_y_position):
 
-    font = ImageFont.truetype(config.current_directory + "text_font.ttf", font_size)
+def calculate_text_size_and_position(text, available_width, available_height):
+    font_path = config.current_directory + "text_font.ttf"
+    max_font_size = 100  # Start with a large font size to scale down
 
-    text_width = 500
-    text_height = 500
-    text_image = Image.new('L', (text_width, text_height), color=255)
+    # Try different font sizes and choose the largest one that fits
+    for font_size in range(max_font_size, 1, -1):
+        font = ImageFont.truetype(font_path, font_size)
+        # Create a temporary image to measure text dimensions
+        text_image = Image.new('L', (int(available_width), int(available_height)), color=255)
+        text_draw = ImageDraw.Draw(text_image)
+        
+        # Measure text size
+        text_bbox = text_draw.textbbox((0, 0), text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        
+        # Check if text fits within the available width and height
+        if text_width <= available_width and text_height <= available_height:
+            # Calculate centered position
+            text_x_position = (available_width - text_width) / 2
+            text_y_position = (available_height - text_height) / 2
+            return font_size, text_x_position, text_y_position
     
+    # If no suitable font size was found, use the smallest font size and position
+    return 1, 0, 0
+
+def generate_text(vertices, faces, text, font_size, rotate, width, height, x_scale, y_scale, x_offset, y_offset):
+    
+    font = ImageFont.truetype(config.current_directory + "MinecraftBold.otf", font_size)
+    temp_image = Image.new('L', (500, 500), color=255)
+    
+    temp_draw = ImageDraw.Draw(temp_image)
+    char_bbox = temp_draw.textbbox((0, 0), text, font=font)
+    text_width = char_bbox[2] - char_bbox[0]
+    text_height = char_bbox[3] - char_bbox[1]
+
+    text_image = Image.new('L', (500, 500), color=255)
     text_draw = ImageDraw.Draw(text_image)
+    char_bbox = text_draw.textbbox((0, 0), text, font=font)
+    text_draw.text((x_offset, y_offset), text, fill=0, font=font)
 
-    x_offset = text_x_position
-    for char in text:
-        # Get the size of the current character using textbbox
-        char_bbox = text_draw.textbbox((0, 0), char, font=font)
-        char_width = char_bbox[2] - char_bbox[0]
-        char_height = char_bbox[3] - char_bbox[1]
-        
-        # Draw the character at the current x_offset position
-        text_draw.text((x_offset, text_y_position), char, fill=0, font=font)
-        
-        # Update the x_offset for the next character, adding spacing
-        x_offset += char_width + character_spacing
-
-    # Draw the text on the new larger image
-    #text_draw.text((text_x_position, text_y_position), text, fill=0, font=font)
-
-    # Correctly orient the image
     text_image = ImageOps.mirror(text_image)
-    text_image = text_image.rotate(90, expand=True)
+    if rotate:
+        text_image = text_image.rotate(90, expand=True)
 
-    # Convert this text image to 3D vertices (black pixels = protruding)
     text_pixels = text_image.load()
 
-    # Loop through the pixels in the text image and generate vertices
+    print(f"width: {int(width)}, text: {text_width}, image: {text_image.width}, scale: {x_scale}")
+    print(f"height: {height}, text: {text_height}, image: {text_image.height}, scale: {y_scale}\n")
+
     for y in range(text_image.height):
         for x in range(text_image.width):
-            if text_pixels[x, y] < 128:  # Black pixels = protruding areas
+            if text_pixels[x, y] < 128:
                 text_idx = len(vertices)
 
                 vertices.extend([
-                    [x, y, base_thickness],
-                    [x + 1, y, base_thickness],
-                    [x + 1, y + 1, base_thickness],
-                    [x, y + 1, base_thickness],
-                    [x, y, base_thickness + protrusion_thickness],
-                    [x + 1, y, base_thickness + protrusion_thickness],
-                    [x + 1, y + 1, base_thickness + protrusion_thickness],
-                    [x, y + 1, base_thickness + protrusion_thickness]
+                    [x * x_scale, y * y_scale, base_thickness],
+                    [(x + 1) * x_scale, y * y_scale, base_thickness],
+                    [(x + 1) * x_scale, (y + 1) * y_scale, base_thickness],
+                    [x * x_scale, (y + 1) * y_scale, base_thickness],
+                    [x * x_scale, y * y_scale, base_thickness + protrusion_thickness],
+                    [(x + 1) * x_scale, y * y_scale, base_thickness + protrusion_thickness],
+                    [(x + 1) * x_scale, (y + 1) * y_scale, base_thickness + protrusion_thickness],
+                    [x * x_scale, (y + 1) * y_scale, base_thickness + protrusion_thickness]
                 ])
 
                 add_faces(faces, text_idx)
@@ -310,13 +327,11 @@ def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
 
-    # Calculate grid layout dynamically
     total_qr_codes = len(config.qr_code_text_array)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
 
-    # Loop over the list of public/private keys
     for idx, qr_code_text in enumerate(config.qr_code_text_array):
-        # Determine row and column position for each QR code
+        
         col = idx // grid_size
         row = idx % grid_size
         x_offset = col * (desired_size + sd_card_height + (space_between_qrs * idx))
@@ -325,52 +340,56 @@ def qr_code():
         vertices = []
         faces = []
 
-        qr_code_x_offset = x_offset + sd_card_width
+        qr_code_x_offset = x_offset + 10
         pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
 
         height, width = pixels.shape
-        # Calculate scaling factors
         x_scale = desired_size / width
         y_scale = desired_size / height
 
         generate_base(vertices, faces, desired_size, desired_size, qr_code_x_offset, y_offset)
         generate_outline(vertices, faces, [1,1,1,1], width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
 
-        sd_card_x_offset = x_offset + sd_card_height + sd_card_width
-        sd_card_y_offset = y_offset + desired_size
-        generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
+        #sd_card_x_offset = x_offset + sd_card_height + 10
+        #sd_card_y_offset = y_offset + desired_size
+        #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
         baseplate_width = sd_card_width
-        baseplate_height = desired_size - sd_card_height
-        baseplate_x_offset = sd_card_height + sd_card_width
+        baseplate_height = desired_size
+        baseplate_x_offset = 10
         baseplate_y_offset = desired_size
-        baseplate_x_scale = baseplate_width / round(baseplate_width)
-        baseplate_y_scale = baseplate_height / round(baseplate_height)
+        baseplate_y_scale = baseplate_width / round(baseplate_width)
+        baseplate_x_scale = baseplate_height / round(baseplate_height)
         generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [0,1,1,0], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        generate_outline(vertices, faces, [1,1,1,0], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
-        font_size = 11
-        text_x_position = (desired_size * (idx + 1)) + (space_between_qrs * idx) + 1
-        text_y_position = sd_card_height + sd_card_width + 7
-        generate_text(vertices, faces, text, font_size, 0, text_x_position, text_y_position)
+        font_size = 12
+        text_x_scale = .5
+        text_y_scale = .8
+        text_x_position = 31 / text_x_scale
+        text_y_position = 20 / text_y_scale
+        generate_text(vertices, faces, text, font_size, True, baseplate_width, baseplate_height, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         baseplate_width = desired_size + sd_card_width
-        baseplate_height = sd_card_width
+        baseplate_height = 10
         baseplate_x_offset = 0
         baseplate_y_offset = y_offset
-        baseplate_x_scale = baseplate_width / round(baseplate_width)
-        baseplate_y_scale = baseplate_height / round(baseplate_height)
+        baseplate_y_scale = baseplate_width / round(baseplate_width)
+        baseplate_x_scale = baseplate_height / round(baseplate_height)
         generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
         generate_outline(vertices, faces, [1,1,0,1], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
+        font_size, text_x_position, text_y_position = calculate_text_size_and_position(
+            config.front_top_text[idx], baseplate_width, baseplate_height
+        )
 
         text = config.front_top_text[idx]
-        font_size = 10
-        text_x_position = 1.5
-        text_y_position = 2
-        generate_text(vertices, faces, text, font_size, .2, text_x_position, text_y_position)
+        font_size = 14
+        text_x_position = 3
+        text_y_position = 1
+        generate_text(vertices, faces, text, font_size, True, baseplate_width, baseplate_height, .7, .615, text_x_position, text_y_position)
 
 
         current_vertex_offset = len(all_vertices)
