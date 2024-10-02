@@ -256,7 +256,7 @@ def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_off
 
 
 def calculate_text_size_and_position(text, available_width, available_height):
-    font_path = config.current_directory + "text_font.ttf"
+    font_path = config.current_directory + "MinecraftBold.otf"
     max_font_size = 100  # Start with a large font size to scale down
 
     # Try different font sizes and choose the largest one that fits
@@ -302,8 +302,8 @@ def generate_text(vertices, faces, text, font_size, rotate, width, height, x_sca
 
     text_pixels = text_image.load()
 
-    print(f"width: {int(width)}, text: {text_width}, image: {text_image.width}, scale: {x_scale}")
-    print(f"height: {height}, text: {text_height}, image: {text_image.height}, scale: {y_scale}\n")
+    #print(f"width: {int(width)}, text: {text_width}, image: {text_image.width}, scale: {x_scale}")
+    #print(f"height: {height}, text: {text_height}, image: {text_image.height}, scale: {y_scale}\n")
 
     for y in range(text_image.height):
         for x in range(text_image.width):
@@ -382,14 +382,16 @@ def qr_code():
         generate_outline(vertices, faces, [1,1,0,1], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         font_size, text_x_position, text_y_position = calculate_text_size_and_position(
-            config.front_top_text[idx], baseplate_width, baseplate_height
+            config.front_top_text[idx], baseplate_width - 2, baseplate_height - 2
         )
 
         text = config.front_top_text[idx]
-        font_size = 14
-        text_x_position = 3
-        text_y_position = 1
-        generate_text(vertices, faces, text, font_size, True, baseplate_width, baseplate_height, .7, .615, text_x_position, text_y_position)
+        #font_size = 14
+        text_x_scale = 1#.7
+        text_y_scale = 1#.615
+        text_x_position = 2
+        text_y_position = .75
+        generate_text(vertices, faces, text, font_size, True, baseplate_width, baseplate_height, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
 
         current_vertex_offset = len(all_vertices)
