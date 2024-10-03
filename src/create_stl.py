@@ -343,10 +343,6 @@ def qr_code():
         generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
         generate_outline(vertices, faces, [1,1,0,1], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
-        font_size, text_x_position, text_y_position = calculate_text_size_and_position(
-            config.front_top_text[idx], baseplate_width - 2, baseplate_height - 2
-        )
-
         text = config.front_top_text[idx]
         font_size = 18
         text_x_scale = .45
