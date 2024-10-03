@@ -161,10 +161,10 @@ def generate_outline(vertices, faces, sides, width, height, x_scale, y_scale, x_
                     [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
                     [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
                     [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + protrusion_thickness],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + protrusion_thickness],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + protrusion_thickness],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + protrusion_thickness]
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * 3],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * 3],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * 3],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * 3]
                 ])
 
                 # Add the faces for this outline section
@@ -254,9 +254,9 @@ def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_off
                 ])
             add_faces(faces, qr_idx)
 
-def generate_text(vertices, faces, text, font_size, x_scale, y_scale, x_offset, y_offset):
+def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_offset, y_offset):
     
-    font = ImageFont.truetype(config.current_directory + "MinecraftBold.otf", font_size)
+    font = ImageFont.truetype(config.current_directory + font, font_size)
 
     text_image = Image.new('L', (500, 500), color=255)
     text_draw = ImageDraw.Draw(text_image)
@@ -327,12 +327,13 @@ def qr_code():
         generate_outline(vertices, faces, [1,1,1,0], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
-        font_size = 12
-        text_x_scale = .5
-        text_y_scale = 1
-        text_x_position = 49
-        text_y_position = 25
-        generate_text(vertices, faces, text, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        font = "8bitoperator_jve.ttf"
+        font_size = 16
+        text_x_scale = .44
+        text_y_scale = 1.5
+        text_x_position = (baseplate_y_offset + 3) / text_y_scale
+        text_y_position = baseplate_x_offset / text_x_scale
+        generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         baseplate_width = desired_size + sd_card_width
         baseplate_height = 10
@@ -344,12 +345,13 @@ def qr_code():
         generate_outline(vertices, faces, [1,1,0,1], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
+        font = "MinecraftBold.otf"
         font_size = 18
         text_x_scale = .45
         text_y_scale = .45
-        text_x_position = 7
-        text_y_position = 4
-        generate_text(vertices, faces, text, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        text_x_position = (baseplate_y_offset + 3) / text_y_scale
+        text_y_position = (baseplate_x_offset + 2) / text_x_scale
+        generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
 
         current_vertex_offset = len(all_vertices)
