@@ -254,56 +254,18 @@ def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_off
                 ])
             add_faces(faces, qr_idx)
 
-
-def calculate_text_size_and_position(text, available_width, available_height):
-    font_path = config.current_directory + "MinecraftBold.otf"
-    max_font_size = 100  # Start with a large font size to scale down
-
-    # Try different font sizes and choose the largest one that fits
-    for font_size in range(max_font_size, 1, -1):
-        font = ImageFont.truetype(font_path, font_size)
-        # Create a temporary image to measure text dimensions
-        text_image = Image.new('L', (int(available_width), int(available_height)), color=255)
-        text_draw = ImageDraw.Draw(text_image)
-        
-        # Measure text size
-        text_bbox = text_draw.textbbox((0, 0), text, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        text_height = text_bbox[3] - text_bbox[1]
-        
-        # Check if text fits within the available width and height
-        if text_width <= available_width and text_height <= available_height:
-            # Calculate centered position
-            text_x_position = (available_width - text_width) / 2
-            text_y_position = (available_height - text_height) / 2
-            return font_size, text_x_position, text_y_position
-    
-    # If no suitable font size was found, use the smallest font size and position
-    return 1, 0, 0
-
-def generate_text(vertices, faces, text, font_size, rotate, width, height, x_scale, y_scale, x_offset, y_offset):
+def generate_text(vertices, faces, text, font_size, x_scale, y_scale, x_offset, y_offset):
     
     font = ImageFont.truetype(config.current_directory + "MinecraftBold.otf", font_size)
-    temp_image = Image.new('L', (500, 500), color=255)
-    
-    temp_draw = ImageDraw.Draw(temp_image)
-    char_bbox = temp_draw.textbbox((0, 0), text, font=font)
-    text_width = char_bbox[2] - char_bbox[0]
-    text_height = char_bbox[3] - char_bbox[1]
 
     text_image = Image.new('L', (500, 500), color=255)
     text_draw = ImageDraw.Draw(text_image)
-    char_bbox = text_draw.textbbox((0, 0), text, font=font)
     text_draw.text((x_offset, y_offset), text, fill=0, font=font)
 
     text_image = ImageOps.mirror(text_image)
-    if rotate:
-        text_image = text_image.rotate(90, expand=True)
+    text_image = text_image.rotate(90, expand=True)
 
     text_pixels = text_image.load()
-
-    #print(f"width: {int(width)}, text: {text_width}, image: {text_image.width}, scale: {x_scale}")
-    #print(f"height: {height}, text: {text_height}, image: {text_image.height}, scale: {y_scale}\n")
 
     for y in range(text_image.height):
         for x in range(text_image.width):
@@ -367,10 +329,10 @@ def qr_code():
         text = config.front_right_text[idx]
         font_size = 12
         text_x_scale = .5
-        text_y_scale = .8
-        text_x_position = 31 / text_x_scale
-        text_y_position = 20 / text_y_scale
-        generate_text(vertices, faces, text, font_size, True, baseplate_width, baseplate_height, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        text_y_scale = 1
+        text_x_position = 49
+        text_y_position = 25
+        generate_text(vertices, faces, text, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         baseplate_width = desired_size + sd_card_width
         baseplate_height = 10
@@ -386,12 +348,12 @@ def qr_code():
         )
 
         text = config.front_top_text[idx]
-        #font_size = 14
-        text_x_scale = 1#.7
-        text_y_scale = 1#.615
-        text_x_position = 2
-        text_y_position = .75
-        generate_text(vertices, faces, text, font_size, True, baseplate_width, baseplate_height, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        font_size = 18
+        text_x_scale = .45
+        text_y_scale = .45
+        text_x_position = 7
+        text_y_position = 4
+        generate_text(vertices, faces, text, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
 
         current_vertex_offset = len(all_vertices)
@@ -412,22 +374,6 @@ def qr_code():
     qr_mesh.save(rf'{stl_file}')
 
     return round(base_thickness + layer_height, 2)
-
-
-def load_and_transform_stl(stl_file, translation=(0, 0, 0), rotation_degrees=(0, 0, 0)):
-    # Load the STL
-    sd_card_mesh = mesh.Mesh.from_file(stl_file)
-
-    # Apply translation
-    sd_card_mesh.translate(translation)
-
-    # Apply rotation
-    r = R.from_euler('xyz', rotation_degrees, degrees=True)
-    sd_card_mesh.rotate_using_matrix(r.as_matrix())
-
-    return sd_card_mesh
-
-def combine_stl(main_mesh, new_mesh):
     # Combine the vertices of both meshes
     combined_vectors = np.concatenate([main_mesh.vectors, new_mesh.vectors], axis=0)
     
