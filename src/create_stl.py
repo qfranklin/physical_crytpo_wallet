@@ -136,20 +136,20 @@ def generate_base(vertices, faces, width, height, x_offset, y_offset):
     ])
     add_faces(faces, idx)
 
-def generate_outline(vertices, faces, sides, width, height, x_scale, y_scale, x_offset, y_offset):
+def generate_outline(vertices, faces, sides, thickness, layers, width, height, x_scale, y_scale, x_offset, y_offset):
 
     for y in range(width):
         for x in range(height):
             # Check for sides and add outline accordingly
             add_outline = False
 
-            if sides[0] == 1 and x == 0:  # Top side
+            if sides[0] == 1 and x < thickness:  # Top side
                 add_outline = True
-            elif sides[1] == 1 and (y + 1) == width:  # Right side
+            elif sides[1] == 1 and (y + thickness) >= width:  # Right side
                 add_outline = True
-            elif sides[2] == 1 and (x + 1) == height:  # Bottom side
+            elif sides[2] == 1 and (x + thickness) >= height:  # Bottom side
                 add_outline = True
-            elif sides[3] == 1 and y == 0:  # Left side
+            elif sides[3] == 1 and y < thickness:  # Left side
                 add_outline = True
 
             if add_outline:
@@ -157,14 +157,14 @@ def generate_outline(vertices, faces, sides, width, height, x_scale, y_scale, x_
 
                 # Add the vertices for the outline
                 vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * 3],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * 3],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * 3],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * 3]
+                    [x * x_scale + x_offset, y * y_scale + y_offset, 0],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, 0],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * layers],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * layers],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * layers],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * layers]
                 ])
 
                 # Add the faces for this outline section
@@ -311,7 +311,7 @@ def qr_code():
         y_scale = desired_size / height
 
         generate_base(vertices, faces, desired_size, desired_size, qr_code_x_offset, y_offset)
-        generate_outline(vertices, faces, [1,1,1,1], width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
+        generate_outline(vertices, faces, [1,1,1,1], 1, 3, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
 
         #sd_card_x_offset = x_offset + sd_card_height + 10
         #sd_card_y_offset = y_offset + desired_size
@@ -324,7 +324,7 @@ def qr_code():
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
         generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,1,0], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        generate_outline(vertices, faces, [1,1,1,0], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
         font = "8bitoperator_jve.ttf"
@@ -342,7 +342,7 @@ def qr_code():
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
         generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,0,1], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
         font = "MinecraftBold.otf"
@@ -353,6 +353,15 @@ def qr_code():
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
         generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
+
+        # An encasing mold for puring epoxy
+        mold_width = round(desired_size + sd_card_width + 8)
+        mold_height = round(desired_size + 10 + 8)
+        mold_x_offset = -4
+        mold_y_offset = -4
+        mold_x_scale = mold_height / round(desired_size + 10 + 8)
+        mold_y_scale = mold_width / round(desired_size + sd_card_width + 8)
+        generate_outline(vertices, faces, [1,1,1,1], 2, 5, mold_width, mold_height, mold_x_scale, mold_y_scale, mold_x_offset, mold_y_offset)
 
         print(f"{desired_size + sd_card_width}")
 
