@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 45
+desired_size = 40
 layer_height = 0.16
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 5
@@ -329,10 +329,10 @@ def qr_code():
         text = config.front_right_text[idx]
         font = "8bitoperator_jve.ttf"
         font_size = 16
-        text_x_scale = .44
-        text_y_scale = 1.5
-        text_x_position = (baseplate_y_offset + 3) / text_y_scale
-        text_y_position = baseplate_x_offset / text_x_scale
+        text_x_scale = .36
+        text_y_scale = 1.64
+        text_x_position = (baseplate_y_offset + 2.2) / text_y_scale
+        text_y_position = (baseplate_x_offset + 2) / text_x_scale
         generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         baseplate_width = desired_size + sd_card_width
@@ -348,11 +348,13 @@ def qr_code():
         font = "MinecraftBold.otf"
         font_size = 18
         text_x_scale = .45
-        text_y_scale = .45
+        text_y_scale = .415
         text_x_position = (baseplate_y_offset + 3) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
         generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
+
+        print(f"{desired_size + sd_card_width}")
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
