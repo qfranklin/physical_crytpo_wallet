@@ -302,6 +302,7 @@ def qr_code():
         vertices = []
         faces = []
 
+        #'''
         qr_code_x_offset = x_offset + 10
         pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
@@ -352,16 +353,18 @@ def qr_code():
         text_x_position = (baseplate_y_offset + 3) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
         generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
-
+        #'''
 
         # An encasing mold for puring epoxy
-        mold_width = round(desired_size + sd_card_width + 8)
-        mold_height = round(desired_size + 10 + 8)
-        mold_x_offset = -4
-        mold_y_offset = -4
-        mold_x_scale = mold_height / round(desired_size + 10 + 8)
-        mold_y_scale = mold_width / round(desired_size + sd_card_width + 8)
-        generate_outline(vertices, faces, [1,1,1,1], 2, 5, mold_width, mold_height, mold_x_scale, mold_y_scale, mold_x_offset, mold_y_offset)
+        mold_thickness = 6
+        mold_width = round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
+        mold_height = round(desired_size + 10 + 4 + (mold_thickness * 2))
+        mold_x_scale = mold_height / round(desired_size + 10 + 4 + (mold_thickness * 2))
+        mold_y_scale = mold_width / round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
+        mold_x_offset = -(mold_thickness + 2) * mold_y_scale
+        mold_y_offset = -(mold_thickness + 2) * mold_x_scale
+
+        generate_outline(vertices, faces, [1,1,1,1], mold_thickness, 5, mold_width, mold_height, mold_x_scale, mold_y_scale, mold_x_offset, mold_y_offset)
 
         print(f"{desired_size + sd_card_width}")
 
