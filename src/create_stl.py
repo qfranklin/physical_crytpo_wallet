@@ -285,6 +285,44 @@ def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_of
 
                 add_faces(faces, text_idx)
 
+def generate_mold(vertices, faces, thickness, layers, width, height, x_offset, y_offset):
+
+    for _ in range(2):
+
+        idx = len(vertices)
+        
+        vertices.extend([
+            [x_offset, thickness + y_offset, 0],
+            [thickness + x_offset, y_offset, 0],
+            [thickness + x_offset, width + y_offset, 0],
+            [x_offset, width + y_offset - thickness, 0],
+            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, width + y_offset, base_thickness + layer_height * layers],
+            [x_offset, width + y_offset - thickness, base_thickness + layer_height * layers]
+        ])
+        add_faces(faces, idx)
+
+        x_offset = x_offset + thickness + 5
+
+        idx = len(vertices)
+
+        vertices.extend([
+            [x_offset, thickness + y_offset, 0],
+            [thickness + x_offset, y_offset, 0],
+            [thickness + x_offset, height + y_offset, 0],
+            [x_offset, height + y_offset - thickness, 0],
+            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, height + y_offset, base_thickness + layer_height * layers],
+            [x_offset, height + y_offset - thickness, base_thickness + layer_height * layers]
+        ])
+        add_faces(faces, idx)
+
+        x_offset = x_offset + thickness + 5
+
+    return 
+
 def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
@@ -359,14 +397,10 @@ def qr_code():
         mold_thickness = 6
         mold_width = round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
         mold_height = round(desired_size + 10 + 4 + (mold_thickness * 2))
-        mold_x_scale = mold_height / round(desired_size + 10 + 4 + (mold_thickness * 2))
-        mold_y_scale = mold_width / round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
-        mold_x_offset = -(mold_thickness + 2) * mold_y_scale
-        mold_y_offset = -(mold_thickness + 2) * mold_x_scale
+        mold_x_offset = baseplate_width
+        mold_y_offset = 0
 
-        generate_outline(vertices, faces, [1,1,1,1], mold_thickness, 5, mold_width, mold_height, mold_x_scale, mold_y_scale, mold_x_offset, mold_y_offset)
-
-        print(f"{desired_size + sd_card_width}")
+        generate_mold(vertices, faces, mold_thickness, 14, mold_width, mold_height, mold_x_offset, mold_y_offset)
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
@@ -386,13 +420,3 @@ def qr_code():
     qr_mesh.save(rf'{stl_file}')
 
     return round(base_thickness + layer_height, 2)
-    # Combine the vertices of both meshes
-    combined_vectors = np.concatenate([main_mesh.vectors, new_mesh.vectors], axis=0)
-    
-    # Create the combined mesh with the combined vectors
-    combined_mesh = mesh.Mesh(np.zeros(combined_vectors.shape[0], dtype=mesh.Mesh.dtype))
-    
-    for i, vector in enumerate(combined_vectors):
-        combined_mesh.vectors[i] = vector
-
-    return combined_mesh
