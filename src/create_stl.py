@@ -136,20 +136,20 @@ def generate_base(vertices, faces, width, height, x_offset, y_offset):
     ])
     add_faces(faces, idx)
 
-def generate_outline(vertices, faces, sides, width, height, x_scale, y_scale, x_offset, y_offset):
+def generate_outline(vertices, faces, sides, thickness, layers, width, height, x_scale, y_scale, x_offset, y_offset):
 
     for y in range(width):
         for x in range(height):
             # Check for sides and add outline accordingly
             add_outline = False
 
-            if sides[0] == 1 and x == 0:  # Top side
+            if sides[0] == 1 and x < thickness:  # Top side
                 add_outline = True
-            elif sides[1] == 1 and (y + 1) == width:  # Right side
+            elif sides[1] == 1 and (y + thickness) >= width:  # Right side
                 add_outline = True
-            elif sides[2] == 1 and (x + 1) == height:  # Bottom side
+            elif sides[2] == 1 and (x + thickness) >= height:  # Bottom side
                 add_outline = True
-            elif sides[3] == 1 and y == 0:  # Left side
+            elif sides[3] == 1 and y < thickness:  # Left side
                 add_outline = True
 
             if add_outline:
@@ -157,14 +157,14 @@ def generate_outline(vertices, faces, sides, width, height, x_scale, y_scale, x_
 
                 # Add the vertices for the outline
                 vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * 3],
-                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * 3],
-                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * 3],
-                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * 3]
+                    [x * x_scale + x_offset, y * y_scale + y_offset, 0],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, 0],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, 0],
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * layers],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + layer_height * layers],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * layers],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + layer_height * layers]
                 ])
 
                 # Add the faces for this outline section
@@ -285,6 +285,44 @@ def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_of
 
                 add_faces(faces, text_idx)
 
+def generate_mold(vertices, faces, thickness, layers, width, height, x_offset, y_offset):
+
+    for _ in range(2):
+
+        idx = len(vertices)
+        
+        vertices.extend([
+            [x_offset, thickness + y_offset, 0],
+            [thickness + x_offset, y_offset, 0],
+            [thickness + x_offset, width + y_offset, 0],
+            [x_offset, width + y_offset - thickness, 0],
+            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, width + y_offset, base_thickness + layer_height * layers],
+            [x_offset, width + y_offset - thickness, base_thickness + layer_height * layers]
+        ])
+        add_faces(faces, idx)
+
+        x_offset = x_offset + thickness + 5
+
+        idx = len(vertices)
+
+        vertices.extend([
+            [x_offset, thickness + y_offset, 0],
+            [thickness + x_offset, y_offset, 0],
+            [thickness + x_offset, height + y_offset, 0],
+            [x_offset, height + y_offset - thickness, 0],
+            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
+            [thickness + x_offset, height + y_offset, base_thickness + layer_height * layers],
+            [x_offset, height + y_offset - thickness, base_thickness + layer_height * layers]
+        ])
+        add_faces(faces, idx)
+
+        x_offset = x_offset + thickness + 5
+
+    return 
+
 def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
@@ -302,6 +340,7 @@ def qr_code():
         vertices = []
         faces = []
 
+        #'''
         qr_code_x_offset = x_offset + 10
         pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
@@ -311,7 +350,7 @@ def qr_code():
         y_scale = desired_size / height
 
         generate_base(vertices, faces, desired_size, desired_size, qr_code_x_offset, y_offset)
-        generate_outline(vertices, faces, [1,1,1,1], width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
+        generate_outline(vertices, faces, [1,1,1,1], 1, 3, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
 
         #sd_card_x_offset = x_offset + sd_card_height + 10
         #sd_card_y_offset = y_offset + desired_size
@@ -324,7 +363,7 @@ def qr_code():
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
         generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,1,0], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        generate_outline(vertices, faces, [1,1,1,0], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
         font = "8bitoperator_jve.ttf"
@@ -342,7 +381,7 @@ def qr_code():
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
         generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,0,1], round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
         font = "MinecraftBold.otf"
@@ -352,9 +391,16 @@ def qr_code():
         text_x_position = (baseplate_y_offset + 3) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
         generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        #'''
 
+        # An encasing mold for puring epoxy
+        mold_thickness = 6
+        mold_width = round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
+        mold_height = round(desired_size + 10 + 4 + (mold_thickness * 2))
+        mold_x_offset = baseplate_width
+        mold_y_offset = 0
 
-        print(f"{desired_size + sd_card_width}")
+        generate_mold(vertices, faces, mold_thickness, 14, mold_width, mold_height, mold_x_offset, mold_y_offset)
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
@@ -374,13 +420,3 @@ def qr_code():
     qr_mesh.save(rf'{stl_file}')
 
     return round(base_thickness + layer_height, 2)
-    # Combine the vertices of both meshes
-    combined_vectors = np.concatenate([main_mesh.vectors, new_mesh.vectors], axis=0)
-    
-    # Create the combined mesh with the combined vectors
-    combined_mesh = mesh.Mesh(np.zeros(combined_vectors.shape[0], dtype=mesh.Mesh.dtype))
-    
-    for i, vector in enumerate(combined_vectors):
-        combined_mesh.vectors[i] = vector
-
-    return combined_mesh
