@@ -12,7 +12,7 @@ import config.config as config
 desired_size = 50
 layer_height = 0.16
 protrusion_thickness = layer_height * 2
-base_thickness = layer_height * 5
+base_thickness = layer_height * 3
 space_between_qrs = 5
 all_vertices = []
 all_faces = []
@@ -242,12 +242,12 @@ def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_of
     
     font = ImageFont.truetype(config.current_directory + font, font_size)
 
-    text_image = Image.new('L', (500, 500), color=255)
+    text_image = Image.new('L', (700, 700), color=255)
     text_draw = ImageDraw.Draw(text_image)
     text_draw.text((x_offset, y_offset), text, fill=0, font=font)
 
     text_image = ImageOps.mirror(text_image)
-    text_image = text_image.rotate(90, expand=True)
+    text_image = text_image.rotate(180, expand=True)
 
     text_pixels = text_image.load()
 
@@ -366,10 +366,16 @@ def qr_code():
         vertices = []
         faces = []
 
-        #'''
-        qr_code_x_offset = x_offset + 10
+        '''
+        qr_code_x_offset = x_offset
         pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
+        font_size = 80
+        text_x_scale = .1
+        text_y_scale = .1
+        text_x_position = (22.5) / text_y_scale
+        text_y_position = (40) / text_x_scale
+        generate_text(vertices, faces, "Q", "SuperMagic.ttf", font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         height, width = pixels.shape
         x_scale = desired_size / width
@@ -382,25 +388,7 @@ def qr_code():
         #sd_card_y_offset = y_offset + desired_size
         #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
-        baseplate_width = sd_card_width
-        baseplate_height = desired_size
-        baseplate_x_offset = 10
-        baseplate_y_offset = desired_size
-        baseplate_y_scale = baseplate_width / round(baseplate_width)
-        baseplate_x_scale = baseplate_height / round(baseplate_height)
-        #generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        #generate_outline(vertices, faces, [1,1,1,0], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
-
-        text = config.front_right_text[idx]
-        font = "8bitoperator_jve.ttf"
-        font_size = 16
-        text_x_scale = .46
-        text_y_scale = 1.64
-        text_x_position = (baseplate_y_offset + 2.2) / text_y_scale
-        text_y_position = (baseplate_x_offset + 2) / text_x_scale
-        #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
-
-        baseplate_width = desired_size + sd_card_width
+        baseplate_width = desired_size
         baseplate_height = 10
         baseplate_x_offset = 0
         baseplate_y_offset = y_offset
@@ -428,7 +416,7 @@ def qr_code():
         #generate_mold(vertices, faces, mold_thickness, 28, mold_width, mold_height, mold_x_offset, mold_y_offset)
         
         # For imprinting on silicone mold
-        #generate_base(vertices, faces, layer_height * 40, desired_size, desired_size, 0, 0)
+        generate_base(vertices, faces, layer_height * 5, desired_size, desired_size, 0, 0)
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
