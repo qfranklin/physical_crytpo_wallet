@@ -38,15 +38,15 @@ def import_qr_code(text, logo_text="Q", logo_scale=0.2):
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=1,
-        border=5,  # QR standard + 1 to account for outline
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # Use higher error correction to handle the logo
+        box_size=10,  # Adjust box_size for clearer logo (larger pixel blocks)
+        border=5,  # Add a border
     )
     qr.add_data(text)
     qr.make(fit=True)
 
     img = qr.make_image(fill='black', back_color='white').convert('RGB')
-    
+
     # Add the "Q" logo to the center of the QR code
     qr_width, qr_height = img.size
     logo_size = int(qr_width * logo_scale), int(qr_height * logo_scale)
@@ -57,25 +57,30 @@ def import_qr_code(text, logo_text="Q", logo_scale=0.2):
     draw = ImageDraw.Draw(logo_img)
 
     try:
-        font = ImageFont.truetype("arial.ttf", int(logo_size[1] * 0.8))
+        font = ImageFont.truetype(config.current_directory + "8bitoperator_jve.ttf", 100)
     except IOError:
         font = ImageFont.load_default()
 
-    # Get the size of the "Q" text to center it using textbbox
+    # Get the size of the "Q" text to center it
     text_bbox = draw.textbbox((0, 0), logo_text, font=font)
     text_width = text_bbox[2] - text_bbox[0]
     text_height = text_bbox[3] - text_bbox[1]
-    
-    # Calculate the position to center the text
-    text_position = ((logo_size[0] - text_width) // 2, (logo_size[1] - text_height) // 2)
+
+    # Calculate the position to center the text on the logo
+    text_position = ((logo_size[0] - text_width) // 2, ((logo_size[1] - text_height) // 2) - 25)
 
     # Draw the "Q" in the transparent logo image
     draw.text(text_position, logo_text, font=font, fill=(0, 0, 0, 255))
 
-    # Position to overlay the logo in the center of the QR code
+    # Calculate the central position to clear space for the logo in the QR code
     logo_pos = ((qr_width - logo_size[0]) // 2, (qr_height - logo_size[1]) // 2)
+    logo_box = [logo_pos[0], logo_pos[1], logo_pos[0] + logo_size[0], logo_pos[1] + logo_size[1]]
 
-    # Paste the logo on the QR code
+    # Clear the QR code area where the logo will be placed (set to white)
+    draw_qr = ImageDraw.Draw(img)
+    draw_qr.rectangle(logo_box, fill='white')
+
+    # Paste the logo on the cleared QR code
     img.paste(logo_img, logo_pos, mask=logo_img)
 
     img.save(config.current_directory+"qr_with_logo.png")
@@ -83,7 +88,13 @@ def import_qr_code(text, logo_text="Q", logo_scale=0.2):
     # Convert the QR image to grayscale
     img = img.convert('L')
 
-    return np.array(img)  # Return the pixel array with the logo
+    # Convert image to numpy array
+    pixels = np.array(img)
+
+    # Optionally, flip the QR code to correct orientation
+    pixels = np.flipud(pixels)  # or np.fliplr(pixels) for horizontal flipping
+    
+    return pixels
 
 def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
 
@@ -397,8 +408,8 @@ def qr_code():
         baseplate_y_offset = desired_size
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
-        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,1,0], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        #generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        #generate_outline(vertices, faces, [1,1,1,0], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
         font = "8bitoperator_jve.ttf"
@@ -407,7 +418,7 @@ def qr_code():
         text_y_scale = 1.64
         text_x_position = (baseplate_y_offset + 2.2) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
-        generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         baseplate_width = desired_size + sd_card_width
         baseplate_height = 10
@@ -415,8 +426,8 @@ def qr_code():
         baseplate_y_offset = y_offset
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
-        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        #generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
         font = "MinecraftBold.otf"
@@ -425,7 +436,7 @@ def qr_code():
         text_y_scale = .38
         text_x_position = (baseplate_y_offset + 3) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
-        generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
         #'''
 
         # For 3d printed frame molding
