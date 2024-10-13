@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 58
+desired_size = 50
 layer_height = 0.16
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 5
@@ -34,12 +34,12 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
-def import_qr_code(text, logo_text="Q", logo_scale=0.2):
+def import_qr_code(text, logo_scale=0.2, circle_radius=5, logo_text="Q"):
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,  # Use higher error correction to handle the logo
-        box_size=10,  # Adjust box_size for clearer logo (larger pixel blocks)
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=1,  
         border=5,  # Add a border
     )
     qr.add_data(text)
@@ -47,43 +47,23 @@ def import_qr_code(text, logo_text="Q", logo_scale=0.2):
 
     img = qr.make_image(fill='black', back_color='white').convert('RGB')
 
-    # Add the "Q" logo to the center of the QR code
+    # Calculate the width and height of the QR code
     qr_width, qr_height = img.size
-    logo_size = int(qr_width * logo_scale), int(qr_height * logo_scale)
 
-    # Create a transparent image for the logo
-    logo_img = Image.new('RGBA', logo_size, (255, 255, 255, 0))
+    # Calculate the center for the circular area
+    center = (qr_width // 2, qr_height // 2)
 
-    draw = ImageDraw.Draw(logo_img)
-
-    try:
-        font = ImageFont.truetype(config.current_directory + "8bitoperator_jve.ttf", 100)
-    except IOError:
-        font = ImageFont.load_default()
-
-    # Get the size of the "Q" text to center it
-    text_bbox = draw.textbbox((0, 0), logo_text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_height = text_bbox[3] - text_bbox[1]
-
-    # Calculate the position to center the text on the logo
-    text_position = ((logo_size[0] - text_width) // 2, ((logo_size[1] - text_height) // 2) - 25)
-
-    # Draw the "Q" in the transparent logo image
-    draw.text(text_position, logo_text, font=font, fill=(0, 0, 0, 255))
-
-    # Calculate the central position to clear space for the logo in the QR code
-    logo_pos = ((qr_width - logo_size[0]) // 2, (qr_height - logo_size[1]) // 2)
-    logo_box = [logo_pos[0], logo_pos[1], logo_pos[0] + logo_size[0], logo_pos[1] + logo_size[1]]
-
-    # Clear the QR code area where the logo will be placed (set to white)
+    # Create a mask to cut out a circular area
     draw_qr = ImageDraw.Draw(img)
-    draw_qr.rectangle(logo_box, fill='white')
 
-    # Paste the logo on the cleared QR code
-    img.paste(logo_img, logo_pos, mask=logo_img)
+    # Clear the QR code area where the circular blank will be placed (set to white)
+    draw_qr.ellipse(
+        [center[0] - circle_radius, center[1] - circle_radius,
+         center[0] + circle_radius, center[1] + circle_radius],
+        fill='white'  # Fill the circle with white
+    )
 
-    img.save(config.current_directory+"qr_with_logo.png")
+    img.save(config.current_directory + "qr_with_blank_circle.png")  # Save the resulting image
 
     # Convert the QR image to grayscale
     img = img.convert('L')
@@ -91,9 +71,9 @@ def import_qr_code(text, logo_text="Q", logo_scale=0.2):
     # Convert image to numpy array
     pixels = np.array(img)
 
-    # Optionally, flip the QR code to correct orientation
-    pixels = np.flipud(pixels)  # or np.fliplr(pixels) for horizontal flipping
-    
+    # Flip the QR code to correct orientation
+    pixels = np.flipud(pixels)
+
     return pixels
 
 def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
