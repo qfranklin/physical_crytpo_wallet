@@ -154,90 +154,6 @@ def generate_outline(vertices, faces, sides, thickness, layers, width, height, x
                 # Add the faces for this outline section
                 add_faces(faces, idx)
 
-def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
-    
-    width = int(round(width / x_scale, 0))
-    height = int(round(height / y_scale, 0))
-
-    # Set this to height and set the width to desired_size if not placing sd card in baseplate
-    adjacency_range = -2 #height
-
-    # Add the base extension
-    for y in range(width):
-        for x in range(height):
-
-            if y == 0 or \
-                (x + 1) == height or \
-                (y + 1) == width or \
-                (((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1):
-                z = 0
-            else:
-                z = 0
-
-            if ((height - 1 - x) + (width - 1 - y)) < adjacency_range - 1:
-                continue
-
-            qr_idx = len(vertices)
-
-            if ((height - 1 - x) + (width - 1 - y)) == adjacency_range:
-                # This will make the edge cubes have a 45 degreee edge.
-                vertices.extend([
-                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                    [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                    [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                ])
-            elif ((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1:
-                if (y + 1) == width:
-                    vertices.extend([
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-                elif (x + 1) == height: 
-                    vertices.extend([
-                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness],
-                        [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness + z],
-                        [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-                else:
-                    vertices.extend([
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-            else:
-                vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness + z],
-                    [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, base_thickness + z]
-                ])
-            add_faces(faces, qr_idx)
-
 def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_offset, y_offset):
     
     font = ImageFont.truetype(config.current_directory + font, font_size)
@@ -311,44 +227,6 @@ def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset,
         adjusted_face = [f + current_vertex_offset for f in face]
         faces.append(adjusted_face)
 
-def generate_mold(vertices, faces, thickness, layers, width, height, x_offset, y_offset):
-
-    for _ in range(2):
-
-        idx = len(vertices)
-        
-        vertices.extend([
-            [x_offset, thickness + y_offset, 0],
-            [thickness + x_offset, y_offset, 0],
-            [thickness + x_offset, width + y_offset, 0],
-            [x_offset, width + y_offset - thickness, 0],
-            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, width + y_offset, base_thickness + layer_height * layers],
-            [x_offset, width + y_offset - thickness, base_thickness + layer_height * layers]
-        ])
-        add_faces(faces, idx)
-
-        x_offset = x_offset + thickness + 5
-
-        idx = len(vertices)
-
-        vertices.extend([
-            [x_offset, thickness + y_offset, 0],
-            [thickness + x_offset, y_offset, 0],
-            [thickness + x_offset, height + y_offset, 0],
-            [x_offset, height + y_offset - thickness, 0],
-            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, height + y_offset, base_thickness + layer_height * layers],
-            [x_offset, height + y_offset - thickness, base_thickness + layer_height * layers]
-        ])
-        add_faces(faces, idx)
-
-        x_offset = x_offset + thickness + 5
-
-    return 
-
 def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
@@ -407,16 +285,10 @@ def qr_code():
         #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
         #'''
 
-        # For 3d printed frame molding
-        mold_thickness = 6
-        mold_width = round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
-        mold_height = round(desired_size + 10 + 4 + (mold_thickness * 2))
-        mold_x_offset = 0
-        mold_y_offset = 0
-        #generate_mold(vertices, faces, mold_thickness, 28, mold_width, mold_height, mold_x_offset, mold_y_offset)
-        
         # For imprinting on silicone mold
-        generate_base(vertices, faces, layer_height * 5, desired_size, desired_size, 0, 0)
+        generate_base(vertices, faces, layer_height * 5, 76, 76, 0, 0)
+        generate_base(vertices, faces, layer_height * 15, 60, 60, 8, 8)
+        generate_outline(vertices, faces, [1,1,1,1], 3, 25, 76, 76, 1, 1, 0, 0)
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
