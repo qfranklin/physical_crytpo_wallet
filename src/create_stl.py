@@ -244,7 +244,7 @@ def qr_code():
         vertices = []
         faces = []
 
-        '''
+        #'''
         qr_code_x_offset = x_offset
         pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
@@ -253,7 +253,7 @@ def qr_code():
         text_y_scale = .1
         text_x_position = (22.5) / text_y_scale
         text_y_position = (40) / text_x_scale
-        generate_text(vertices, faces, "Q", "SuperMagic.ttf", font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        #generate_text(vertices, faces, "Q", "SuperMagic.ttf", font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         height, width = pixels.shape
         x_scale = desired_size / width
@@ -285,10 +285,17 @@ def qr_code():
         #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
         #'''
 
+
+        '''
         # For imprinting on silicone mold
         generate_base(vertices, faces, layer_height * 5, 76, 76, 0, 0)
         generate_base(vertices, faces, layer_height * 15, 60, 60, 8, 8)
         generate_outline(vertices, faces, [1,1,1,1], 3, 25, 76, 76, 1, 1, 0, 0)
+        #'''
+
+        
+        logo_thickness = layer_height * 5
+        generate_logo(vertices, faces, config.current_directory + "logo.png", 10, 10, logo_thickness, 1.0, 1.0, [20, 20])
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
@@ -308,3 +315,39 @@ def qr_code():
     qr_mesh.save(rf'{stl_file}')
 
     return round(base_thickness + layer_height, 2)
+
+
+def generate_logo(vertices, faces, logo_path, logo_width, logo_height, protrusion_thickness, x_scale, y_scale, xy_offset):
+    # Load the PNG logo
+    logo_img = Image.open(logo_path).convert("L")  # Convert to grayscale
+    logo_img = ImageOps.mirror(logo_img)
+    logo_img = logo_img.rotate(180, expand=True)
+    logo_img = logo_img.resize((200, 200))  # Resize as needed (adjust as necessary)
+
+    # Convert image to a binary mask (1 for pixel, 0 for no pixel)
+    logo_array = np.array(logo_img) > 128  # Adjust the threshold if necessary
+
+    # Create a flat plane for the logo based on the image dimensions
+    for y in range(logo_img.height - 1):
+        for x in range(logo_img.width - 1):
+            if logo_array[y, x]:  # If the pixel is part of the logo
+                logo_idx = len(vertices)
+
+                # Scale the pixel positions to fit within the logo_width and logo_height
+                x0 = xy_offset[0] + x * (logo_width / logo_img.width) * x_scale
+                y0 = xy_offset[1] + y * (logo_height / logo_img.height) * y_scale
+
+                # Create the vertices for the base and protrusion
+                vertices.extend([
+                    [x0, y0, layer_height * 3],  # Base level
+                    [x0 + (logo_width / logo_img.width) * x_scale, y0, layer_height * 3],
+                    [x0 + (logo_width / logo_img.width) * x_scale, y0 + (logo_height / logo_img.height) * y_scale, layer_height * 3],
+                    [x0, y0 + (logo_height / logo_img.height) * y_scale, layer_height * 3],
+                    [x0, y0, protrusion_thickness],  # Protruding level
+                    [x0 + (logo_width / logo_img.width) * x_scale, y0, protrusion_thickness],
+                    [x0 + (logo_width / logo_img.width) * x_scale, y0 + (logo_height / logo_img.height) * y_scale, protrusion_thickness],
+                    [x0, y0 + (logo_height / logo_img.height) * y_scale, protrusion_thickness]
+                ])
+
+                # Add the faces (two triangles for each of the base and protrusion faces)
+                add_faces(faces, logo_idx)
