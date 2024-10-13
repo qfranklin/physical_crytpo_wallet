@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 40
+desired_size = 58
 layer_height = 0.16
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 5
@@ -121,7 +121,7 @@ def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset,
         adjusted_face = [f + current_vertex_offset for f in face]
         faces.append(adjusted_face)
 
-def generate_base(vertices, faces, width, height, x_offset, y_offset):
+def generate_base(vertices, faces, thickness, width, height, x_offset, y_offset):
 
     idx = len(vertices)
     vertices.extend([
@@ -129,10 +129,10 @@ def generate_base(vertices, faces, width, height, x_offset, y_offset):
         [x_offset + height, y_offset, 0],
         [x_offset + height, y_offset + width, 0],
         [x_offset, y_offset + width, 0],
-        [x_offset, y_offset, base_thickness],
-        [x_offset + height, y_offset, base_thickness],
-        [x_offset + height, y_offset + width, base_thickness],
-        [x_offset, y_offset + width, base_thickness]
+        [x_offset, y_offset, thickness],
+        [x_offset + height, y_offset, thickness],
+        [x_offset + height, y_offset + width, thickness],
+        [x_offset, y_offset + width, thickness]
     ])
     add_faces(faces, idx)
 
@@ -349,7 +349,7 @@ def qr_code():
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        generate_base(vertices, faces, desired_size, desired_size, qr_code_x_offset, y_offset)
+        generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, y_offset)
         generate_outline(vertices, faces, [1,1,1,1], 1, 3, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
 
         #sd_card_x_offset = x_offset + sd_card_height + 10
@@ -362,13 +362,13 @@ def qr_code():
         baseplate_y_offset = desired_size
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
-        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
         generate_outline(vertices, faces, [1,1,1,0], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_right_text[idx]
         font = "8bitoperator_jve.ttf"
         font_size = 16
-        text_x_scale = .36
+        text_x_scale = .46
         text_y_scale = 1.64
         text_x_position = (baseplate_y_offset + 2.2) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
@@ -380,27 +380,29 @@ def qr_code():
         baseplate_y_offset = y_offset
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
-        generate_base(vertices, faces, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
         generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
         font = "MinecraftBold.otf"
         font_size = 18
         text_x_scale = .45
-        text_y_scale = .415
+        text_y_scale = .38
         text_x_position = (baseplate_y_offset + 3) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
         generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
         #'''
 
-        # An encasing mold for puring epoxy
+        # For 3d printed frame molding
         mold_thickness = 6
         mold_width = round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
         mold_height = round(desired_size + 10 + 4 + (mold_thickness * 2))
-        mold_x_offset = baseplate_width
+        mold_x_offset = 0
         mold_y_offset = 0
-
-        generate_mold(vertices, faces, mold_thickness, 14, mold_width, mold_height, mold_x_offset, mold_y_offset)
+        #generate_mold(vertices, faces, mold_thickness, 28, mold_width, mold_height, mold_x_offset, mold_y_offset)
+        
+        # For imprinting on silicone mold
+        #generate_base(vertices, faces, layer_height * 40, desired_size, desired_size, 0, 0)
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
