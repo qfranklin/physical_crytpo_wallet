@@ -34,31 +34,56 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
-def import_sd_card():
-    # Load the SD card STL file once outside the loop
-    sd_card_mesh = mesh.Mesh.from_file(config.current_directory + 'sd_card_bottom.stl')
-    sd_card_vertices = sd_card_mesh.vectors.reshape(-1, 3)  # Extract vertices into a NumPy array
-    sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
+def import_qr_code(text, logo_text="Q", logo_scale=0.2):
+    # Generate QR Code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=1,
+        border=5,  # QR standard + 1 to account for outline
+    )
+    qr.add_data(text)
+    qr.make(fit=True)
 
-    # Rotate the sd card
-    rotation_angle = np.radians(180)
-    rotation_matrix = np.array([
-        [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
-        [np.sin(rotation_angle), np.cos(rotation_angle), 0],
-        [0, 0, 1]
-    ])
-    sd_card_vertices = sd_card_vertices @ rotation_matrix.T
+    img = qr.make_image(fill='black', back_color='white').convert('RGB')
+    
+    # Add the "Q" logo to the center of the QR code
+    qr_width, qr_height = img.size
+    logo_size = int(qr_width * logo_scale), int(qr_height * logo_scale)
 
-    # Move the sd card so the bottom left is aligned with the top left of the qr code and the z axis is zeroed and level
-    sd_card_vertices[:, 0] -= np.max(sd_card_vertices[:, 0])  # Align bottom left corner with (0, 0)
-    sd_card_vertices[:, 1] -= np.min(sd_card_vertices[:, 1])  # Level the bottom of the SD card
-    sd_card_vertices[:, 2] -= np.min(sd_card_vertices[:, 2])  # Zero out the Z axis
+    # Create a transparent image for the logo
+    logo_img = Image.new('RGBA', logo_size, (255, 255, 255, 0))
 
-    # Calculate width and height
-    sd_card_width = np.max(sd_card_vertices[:, 0]) - np.min(sd_card_vertices[:, 0])
-    sd_card_height = np.max(sd_card_vertices[:, 1]) - np.min(sd_card_vertices[:, 1])
+    draw = ImageDraw.Draw(logo_img)
 
-    return sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height
+    try:
+        font = ImageFont.truetype("arial.ttf", int(logo_size[1] * 0.8))
+    except IOError:
+        font = ImageFont.load_default()
+
+    # Get the size of the "Q" text to center it using textbbox
+    text_bbox = draw.textbbox((0, 0), logo_text, font=font)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+    
+    # Calculate the position to center the text
+    text_position = ((logo_size[0] - text_width) // 2, (logo_size[1] - text_height) // 2)
+
+    # Draw the "Q" in the transparent logo image
+    draw.text(text_position, logo_text, font=font, fill=(0, 0, 0, 255))
+
+    # Position to overlay the logo in the center of the QR code
+    logo_pos = ((qr_width - logo_size[0]) // 2, (qr_height - logo_size[1]) // 2)
+
+    # Paste the logo on the QR code
+    img.paste(logo_img, logo_pos, mask=logo_img)
+
+    img.save(config.current_directory+"qr_with_logo.png")
+
+    # Convert the QR image to grayscale
+    img = img.convert('L')
+
+    return np.array(img)  # Return the pixel array with the logo
 
 def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
 
@@ -88,39 +113,7 @@ def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
             ])
 
             add_faces(faces, idx)
-
-def import_qr_code(text):
-    # Generate QR Code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=1,
-        border=5, # 4 units is the qr code standard, but add one to account for outline
-    )
-    qr.add_data(text)
-    qr.make(fit=True)
-
-    img = qr.make_image(fill='black', back_color='white')
-    img = img.convert('L')  # Convert to grayscale
     
-    return np.array(img)  # Get pixel qr_code_text as a numpy array
-    
-def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset, y_offset):
-    
-     # Adjust the SD card vertices for its new position
-    sd_card_vertices_adjusted = sd_card_vertices.copy()
-    sd_card_vertices_adjusted[:, 0] += x_offset
-    sd_card_vertices_adjusted[:, 1] += y_offset
-    sd_card_vertices_adjusted[:, 2] += 0
-
-    current_vertex_offset = len(vertices)
-    vertices.extend(sd_card_vertices_adjusted.tolist())
-
-    # Adjust the SD card faces and add them to the QR code faces
-    for face in sd_card_faces:
-        adjusted_face = [f + current_vertex_offset for f in face]
-        faces.append(adjusted_face)
-
 def generate_base(vertices, faces, thickness, width, height, x_offset, y_offset):
 
     idx = len(vertices)
@@ -284,6 +277,48 @@ def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_of
                 ])
 
                 add_faces(faces, text_idx)
+
+def import_sd_card():
+    # Load the SD card STL file once outside the loop
+    sd_card_mesh = mesh.Mesh.from_file(config.current_directory + 'sd_card_bottom.stl')
+    sd_card_vertices = sd_card_mesh.vectors.reshape(-1, 3)  # Extract vertices into a NumPy array
+    sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
+
+    # Rotate the sd card
+    rotation_angle = np.radians(180)
+    rotation_matrix = np.array([
+        [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
+        [np.sin(rotation_angle), np.cos(rotation_angle), 0],
+        [0, 0, 1]
+    ])
+    sd_card_vertices = sd_card_vertices @ rotation_matrix.T
+
+    # Move the sd card so the bottom left is aligned with the top left of the qr code and the z axis is zeroed and level
+    sd_card_vertices[:, 0] -= np.max(sd_card_vertices[:, 0])  # Align bottom left corner with (0, 0)
+    sd_card_vertices[:, 1] -= np.min(sd_card_vertices[:, 1])  # Level the bottom of the SD card
+    sd_card_vertices[:, 2] -= np.min(sd_card_vertices[:, 2])  # Zero out the Z axis
+
+    # Calculate width and height
+    sd_card_width = np.max(sd_card_vertices[:, 0]) - np.min(sd_card_vertices[:, 0])
+    sd_card_height = np.max(sd_card_vertices[:, 1]) - np.min(sd_card_vertices[:, 1])
+
+    return sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height
+
+def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset, y_offset):
+    
+     # Adjust the SD card vertices for its new position
+    sd_card_vertices_adjusted = sd_card_vertices.copy()
+    sd_card_vertices_adjusted[:, 0] += x_offset
+    sd_card_vertices_adjusted[:, 1] += y_offset
+    sd_card_vertices_adjusted[:, 2] += 0
+
+    current_vertex_offset = len(vertices)
+    vertices.extend(sd_card_vertices_adjusted.tolist())
+
+    # Adjust the SD card faces and add them to the QR code faces
+    for face in sd_card_faces:
+        adjusted_face = [f + current_vertex_offset for f in face]
+        faces.append(adjusted_face)
 
 def generate_mold(vertices, faces, thickness, layers, width, height, x_offset, y_offset):
 
