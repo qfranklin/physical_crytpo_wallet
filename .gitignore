@@ -2,6 +2,6 @@ config.py
 qr.stl
 qr.gcode
 rear_side_outline.pdf
-temp_image.png
+*.png
 
 __pycache__/
