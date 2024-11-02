@@ -313,7 +313,7 @@ def qr_code():
         #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
-        font = "MinecraftRegular.otf"
+        font = "fonts/MinecraftRegular.otf"
         font_size = 16
         text_x_scale = 1
         text_y_scale = 1
