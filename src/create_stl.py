@@ -9,10 +9,10 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 58
-layer_height = 0.16
+desired_size = 30
+layer_height = 0.12
 protrusion_thickness = layer_height * 2
-base_thickness = layer_height * 5
+base_thickness = layer_height * 2
 space_between_qrs = 5
 all_vertices = []
 all_faces = []
@@ -34,31 +34,47 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
-def import_sd_card():
-    # Load the SD card STL file once outside the loop
-    sd_card_mesh = mesh.Mesh.from_file(config.current_directory + 'sd_card_bottom.stl')
-    sd_card_vertices = sd_card_mesh.vectors.reshape(-1, 3)  # Extract vertices into a NumPy array
-    sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
+def import_qr_code(text, logo_scale=0.2, circle_radius=5, logo_text="Q"):
+    # Generate QR Code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=1,  
+        border=1
+    )
+    qr.add_data(text)
+    qr.make(fit=True)
 
-    # Rotate the sd card
-    rotation_angle = np.radians(180)
-    rotation_matrix = np.array([
-        [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
-        [np.sin(rotation_angle), np.cos(rotation_angle), 0],
-        [0, 0, 1]
-    ])
-    sd_card_vertices = sd_card_vertices @ rotation_matrix.T
+    img = qr.make_image(fill='black', back_color='white').convert('RGB')
 
-    # Move the sd card so the bottom left is aligned with the top left of the qr code and the z axis is zeroed and level
-    sd_card_vertices[:, 0] -= np.max(sd_card_vertices[:, 0])  # Align bottom left corner with (0, 0)
-    sd_card_vertices[:, 1] -= np.min(sd_card_vertices[:, 1])  # Level the bottom of the SD card
-    sd_card_vertices[:, 2] -= np.min(sd_card_vertices[:, 2])  # Zero out the Z axis
+    # Calculate the width and height of the QR code
+    qr_width, qr_height = img.size
 
-    # Calculate width and height
-    sd_card_width = np.max(sd_card_vertices[:, 0]) - np.min(sd_card_vertices[:, 0])
-    sd_card_height = np.max(sd_card_vertices[:, 1]) - np.min(sd_card_vertices[:, 1])
+    # Calculate the center for the circular area
+    center = (qr_width // 2, qr_height // 2)
 
-    return sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height
+    # Create a mask to cut out a circular area
+    draw_qr = ImageDraw.Draw(img)
+
+    # Clear the QR code area where the circular blank will be placed (set to white)
+    draw_qr.ellipse(
+        [center[0] - circle_radius, center[1] - circle_radius,
+         center[0] + circle_radius, center[1] + circle_radius],
+        fill='white'  # Fill the circle with white
+    )
+
+    img.save(config.current_directory + "qr_with_blank_circle.png")  # Save the resulting image
+
+    # Convert the QR image to grayscale
+    img = img.convert('L')
+
+    # Convert image to numpy array
+    pixels = np.array(img)
+
+    # Flip the QR code to correct orientation
+    pixels = np.flipud(pixels)
+
+    return pixels
 
 def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
 
@@ -88,39 +104,7 @@ def generate_qr_code(vertices, faces, pixels, x_offset, y_offset):
             ])
 
             add_faces(faces, idx)
-
-def import_qr_code(text):
-    # Generate QR Code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=1,
-        border=5, # 4 units is the qr code standard, but add one to account for outline
-    )
-    qr.add_data(text)
-    qr.make(fit=True)
-
-    img = qr.make_image(fill='black', back_color='white')
-    img = img.convert('L')  # Convert to grayscale
     
-    return np.array(img)  # Get pixel qr_code_text as a numpy array
-    
-def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset, y_offset):
-    
-     # Adjust the SD card vertices for its new position
-    sd_card_vertices_adjusted = sd_card_vertices.copy()
-    sd_card_vertices_adjusted[:, 0] += x_offset
-    sd_card_vertices_adjusted[:, 1] += y_offset
-    sd_card_vertices_adjusted[:, 2] += 0
-
-    current_vertex_offset = len(vertices)
-    vertices.extend(sd_card_vertices_adjusted.tolist())
-
-    # Adjust the SD card faces and add them to the QR code faces
-    for face in sd_card_faces:
-        adjusted_face = [f + current_vertex_offset for f in face]
-        faces.append(adjusted_face)
-
 def generate_base(vertices, faces, thickness, width, height, x_offset, y_offset):
 
     idx = len(vertices)
@@ -170,100 +154,16 @@ def generate_outline(vertices, faces, sides, thickness, layers, width, height, x
                 # Add the faces for this outline section
                 add_faces(faces, idx)
 
-def generate_angled_base(vertices, faces, width, height, x_scale, y_scale, x_offset, y_offset):
-    
-    width = int(round(width / x_scale, 0))
-    height = int(round(height / y_scale, 0))
-
-    # Set this to height and set the width to desired_size if not placing sd card in baseplate
-    adjacency_range = -2 #height
-
-    # Add the base extension
-    for y in range(width):
-        for x in range(height):
-
-            if y == 0 or \
-                (x + 1) == height or \
-                (y + 1) == width or \
-                (((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1):
-                z = 0
-            else:
-                z = 0
-
-            if ((height - 1 - x) + (width - 1 - y)) < adjacency_range - 1:
-                continue
-
-            qr_idx = len(vertices)
-
-            if ((height - 1 - x) + (width - 1 - y)) == adjacency_range:
-                # This will make the edge cubes have a 45 degreee edge.
-                vertices.extend([
-                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                    [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                    [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                    [(x + 1) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                    [(x + .5) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                ])
-            elif ((height - 1 - x) + (width - 1 - y)) == adjacency_range - 1:
-                if (y + 1) == width:
-                    vertices.extend([
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [x * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-                elif (x + 1) == height: 
-                    vertices.extend([
-                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness],
-                        [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [(x + 1) * x_scale + desired_size, (y - 1) * y_scale + y_offset, base_thickness + z],
-                        [(x + 1) * x_scale + desired_size, (y + .5) * y_scale + y_offset, base_thickness + z],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-                else:
-                    vertices.extend([
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness],
-                        [x * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + 1.5) * x_scale + desired_size, y * y_scale + y_offset, base_thickness + z],
-                        [(x + .5) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z],
-                        [(x - 1) * x_scale + desired_size, (y + 1) * y_scale + y_offset, base_thickness + z]
-                    ])
-            else:
-                vertices.extend([
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, base_thickness],
-                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset, base_thickness + z],
-                    [x * x_scale + x_offset + 1 * x_scale, y * y_scale + y_offset + 1 * y_scale, base_thickness + z],
-                    [x * x_scale + x_offset, y * y_scale + y_offset + 1 * y_scale, base_thickness + z]
-                ])
-            add_faces(faces, qr_idx)
-
 def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_offset, y_offset):
     
     font = ImageFont.truetype(config.current_directory + font, font_size)
 
-    text_image = Image.new('L', (500, 500), color=255)
+    text_image = Image.new('L', (700, 700), color=255)
     text_draw = ImageDraw.Draw(text_image)
     text_draw.text((x_offset, y_offset), text, fill=0, font=font)
 
     text_image = ImageOps.mirror(text_image)
-    text_image = text_image.rotate(90, expand=True)
+    text_image = text_image.rotate(180, expand=True)
 
     text_pixels = text_image.load()
 
@@ -285,43 +185,84 @@ def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_of
 
                 add_faces(faces, text_idx)
 
-def generate_mold(vertices, faces, thickness, layers, width, height, x_offset, y_offset):
+def import_sd_card():
+    # Load the SD card STL file once outside the loop
+    sd_card_mesh = mesh.Mesh.from_file(config.current_directory + 'sd_card_bottom.stl')
+    sd_card_vertices = sd_card_mesh.vectors.reshape(-1, 3)  # Extract vertices into a NumPy array
+    sd_card_faces = np.arange(len(sd_card_vertices)).reshape(-1, 3)  # Generate face indices
 
-    for _ in range(2):
+    # Rotate the sd card
+    rotation_angle = np.radians(180)
+    rotation_matrix = np.array([
+        [np.cos(rotation_angle), -np.sin(rotation_angle), 0],
+        [np.sin(rotation_angle), np.cos(rotation_angle), 0],
+        [0, 0, 1]
+    ])
+    sd_card_vertices = sd_card_vertices @ rotation_matrix.T
 
-        idx = len(vertices)
-        
-        vertices.extend([
-            [x_offset, thickness + y_offset, 0],
-            [thickness + x_offset, y_offset, 0],
-            [thickness + x_offset, width + y_offset, 0],
-            [x_offset, width + y_offset - thickness, 0],
-            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, width + y_offset, base_thickness + layer_height * layers],
-            [x_offset, width + y_offset - thickness, base_thickness + layer_height * layers]
-        ])
-        add_faces(faces, idx)
+    # Move the sd card so the bottom left is aligned with the top left of the qr code and the z axis is zeroed and level
+    sd_card_vertices[:, 0] -= np.max(sd_card_vertices[:, 0])  # Align bottom left corner with (0, 0)
+    sd_card_vertices[:, 1] -= np.min(sd_card_vertices[:, 1])  # Level the bottom of the SD card
+    sd_card_vertices[:, 2] -= np.min(sd_card_vertices[:, 2])  # Zero out the Z axis
 
-        x_offset = x_offset + thickness + 5
+    # Calculate width and height
+    sd_card_width = np.max(sd_card_vertices[:, 0]) - np.min(sd_card_vertices[:, 0])
+    sd_card_height = np.max(sd_card_vertices[:, 1]) - np.min(sd_card_vertices[:, 1])
 
-        idx = len(vertices)
+    return sd_card_vertices, sd_card_faces, sd_card_width, sd_card_height
 
-        vertices.extend([
-            [x_offset, thickness + y_offset, 0],
-            [thickness + x_offset, y_offset, 0],
-            [thickness + x_offset, height + y_offset, 0],
-            [x_offset, height + y_offset - thickness, 0],
-            [x_offset, thickness + y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, y_offset, base_thickness + layer_height * layers],
-            [thickness + x_offset, height + y_offset, base_thickness + layer_height * layers],
-            [x_offset, height + y_offset - thickness, base_thickness + layer_height * layers]
-        ])
-        add_faces(faces, idx)
+def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset, y_offset):
+    
+     # Adjust the SD card vertices for its new position
+    sd_card_vertices_adjusted = sd_card_vertices.copy()
+    sd_card_vertices_adjusted[:, 0] += x_offset
+    sd_card_vertices_adjusted[:, 1] += y_offset
+    sd_card_vertices_adjusted[:, 2] += 0
 
-        x_offset = x_offset + thickness + 5
+    current_vertex_offset = len(vertices)
+    vertices.extend(sd_card_vertices_adjusted.tolist())
 
-    return 
+    # Adjust the SD card faces and add them to the QR code faces
+    for face in sd_card_faces:
+        adjusted_face = [f + current_vertex_offset for f in face]
+        faces.append(adjusted_face)
+
+def generate_logo(vertices, faces, logo_path, logo_width, logo_height, protrusion_thickness, xy_offset):
+    # Load the PNG logo
+    logo_img = Image.open(logo_path).convert("L")  # Convert to grayscale
+    logo_img = ImageOps.mirror(logo_img)
+    logo_img = logo_img.rotate(180, expand=True)
+
+    current_size = logo_img.size
+    print(f"current size: {current_size}")
+
+    # Convert image to a binary mask (1 for pixel, 0 for no pixel)
+    logo_array = np.array(logo_img) > 128  # Adjust the threshold if necessary
+
+    # Create a flat plane for the logo based on the image dimensions
+    for y in range(logo_img.height - 1):
+        for x in range(logo_img.width - 1):
+            if logo_array[y, x]:  # If the pixel is part of the logo
+                logo_idx = len(vertices)
+
+                # Scale the pixel positions to fit within the logo_width and logo_height
+                x0 = xy_offset[0] + x * (logo_width / logo_img.width)
+                y0 = xy_offset[1] + y * (logo_height / logo_img.height)
+
+                # Create the vertices for the base and protrusion
+                vertices.extend([
+                    [x0, y0, base_thickness],  # Base level
+                    [x0 + (logo_width / logo_img.width), y0, base_thickness],
+                    [x0 + (logo_width / logo_img.width), y0 + (logo_height / logo_img.height), base_thickness],
+                    [x0, y0 + (logo_height / logo_img.height), base_thickness],
+                    [x0, y0, base_thickness + protrusion_thickness],  # Protruding level
+                    [x0 + (logo_width / logo_img.width), y0, base_thickness + protrusion_thickness],
+                    [x0 + (logo_width / logo_img.width), y0 + (logo_height / logo_img.height), base_thickness + protrusion_thickness],
+                    [x0, y0 + (logo_height / logo_img.height), base_thickness + protrusion_thickness]
+                ])
+
+                # Add the faces (two triangles for each of the base and protrusion faces)
+                add_faces(faces, logo_idx)
 
 def qr_code():
 
@@ -341,47 +282,35 @@ def qr_code():
         faces = []
 
         #'''
-        qr_code_x_offset = x_offset + 10
+        qr_code_x_offset = x_offset
         pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
+        font_size = 80
+        text_x_scale = .1
+        text_y_scale = .1
+        text_x_position = (22.5) / text_y_scale
+        text_y_position = (40) / text_x_scale
+        #generate_text(vertices, faces, "Q", "SuperMagic.ttf", font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         height, width = pixels.shape
         x_scale = desired_size / width
         y_scale = desired_size / height
 
         generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, y_offset)
-        generate_outline(vertices, faces, [1,1,1,1], 1, 3, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
+        #generate_outline(vertices, faces, [1,1,1,1], 1, 2, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
 
         #sd_card_x_offset = x_offset + sd_card_height + 10
         #sd_card_y_offset = y_offset + desired_size
         #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
-        baseplate_width = sd_card_width
-        baseplate_height = desired_size
-        baseplate_x_offset = 10
-        baseplate_y_offset = desired_size
-        baseplate_y_scale = baseplate_width / round(baseplate_width)
-        baseplate_x_scale = baseplate_height / round(baseplate_height)
-        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,1,0], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
-
-        text = config.front_right_text[idx]
-        font = "8bitoperator_jve.ttf"
-        font_size = 16
-        text_x_scale = .46
-        text_y_scale = 1.64
-        text_x_position = (baseplate_y_offset + 2.2) / text_y_scale
-        text_y_position = (baseplate_x_offset + 2) / text_x_scale
-        generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
-
-        baseplate_width = desired_size + sd_card_width
+        baseplate_width = desired_size
         baseplate_height = 10
         baseplate_x_offset = 0
         baseplate_y_offset = y_offset
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
-        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        #generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
         font = "MinecraftBold.otf"
@@ -390,19 +319,23 @@ def qr_code():
         text_y_scale = .38
         text_x_position = (baseplate_y_offset + 3) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
-        generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+
+        
+        logo_thickness = layer_height * 2
+        #generate_logo(vertices, faces, config.current_directory + "logo.png", 8, 8, logo_thickness, [11.3, 10])
+
         #'''
 
-        # For 3d printed frame molding
-        mold_thickness = 6
-        mold_width = round(desired_size + sd_card_width + 4 + (mold_thickness * 2))
-        mold_height = round(desired_size + 10 + 4 + (mold_thickness * 2))
-        mold_x_offset = 0
-        mold_y_offset = 0
-        #generate_mold(vertices, faces, mold_thickness, 28, mold_width, mold_height, mold_x_offset, mold_y_offset)
-        
+
+        '''
         # For imprinting on silicone mold
-        #generate_base(vertices, faces, layer_height * 40, desired_size, desired_size, 0, 0)
+        mold_depth = 30
+        mold_wall = 50
+        generate_base(vertices, faces, layer_height * 5, 66, 66, 0, 0)
+        generate_base(vertices, faces, layer_height * mold_depth, 50, 50, 8, 8)
+        generate_outline(vertices, faces, [1,1,1,1], 3, mold_wall, 66, 66, 1, 1, 0, 0)
+        #'''
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)

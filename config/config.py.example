@@ -4,6 +4,18 @@ prua_slicer_path = 'path\\to\\prusa-slicer-console.exe'
 public_key = '1234567890abc'
 private_key = '1234567890abc'
 
+vCard = """BEGIN:VCARD
+VERSION:3.0
+N:Doe;John;;Mr.;
+FN:John Doe
+ORG:John's Company
+TITLE:Software Engineer
+TEL;TYPE=WORK,VOICE:+1234567890
+EMAIL:john.doe@example.com
+URL:http://www.johndoe.com
+ADR;TYPE=WORK:;;123 Main St;City;State;12345;Country
+END:VCARD"""
+
 grid_data = [personal_public_key, personal_private_key]
 text = ["$1 eth", "$1 eth"]
 rear_side_bottom_text = ["Public Key\n0.0011111 ETH\n$2,000.11", "Private Key\n0.0011111 ETH\n$2,000.11"]
