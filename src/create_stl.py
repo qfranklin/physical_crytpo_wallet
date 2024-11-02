@@ -154,11 +154,11 @@ def generate_outline(vertices, faces, sides, thickness, layers, width, height, x
                 # Add the faces for this outline section
                 add_faces(faces, idx)
 
-def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_offset, y_offset):
+def generate_text(vertices, faces, text, font, font_size, x_size, y_size, x_scale, y_scale, x_offset, y_offset):
     
     font = ImageFont.truetype(config.current_directory + font, font_size)
 
-    text_image = Image.new('L', (700, 700), color=255)
+    text_image = Image.new('L', (x_size, y_size), color=255)
     text_draw = ImageDraw.Draw(text_image)
     text_draw.text((x_offset, y_offset), text, fill=0, font=font)
 
@@ -313,13 +313,16 @@ def qr_code():
         #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
-        font = "MinecraftBold.otf"
-        font_size = 18
-        text_x_scale = .45
-        text_y_scale = .38
-        text_x_position = (baseplate_y_offset + 3) / text_y_scale
-        text_y_position = (baseplate_x_offset + 2) / text_x_scale
-        #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        font = "MinecraftRegular.otf"
+        font_size = 16
+        text_x_scale = 1
+        text_y_scale = 1
+        text_x_position = 0 #(baseplate_y_offset + 3) / text_y_scale
+        text_y_position = 0 #(baseplate_x_offset + 2) / text_x_scale
+        text_x_size = desired_size
+        text_y_size = desired_size + 10
+        print(f"({text_x_size}, {text_y_size})")
+        generate_text(vertices, faces, text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         
         logo_thickness = layer_height * 2
