@@ -9,10 +9,10 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 50
-layer_height = 0.16
+desired_size = 30
+layer_height = 0.12
 protrusion_thickness = layer_height * 2
-base_thickness = layer_height * 3
+base_thickness = layer_height * 2
 space_between_qrs = 5
 all_vertices = []
 all_faces = []
@@ -38,9 +38,9 @@ def import_qr_code(text, logo_scale=0.2, circle_radius=5, logo_text="Q"):
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=1,  
-        border=5,  # Add a border
+        border=1
     )
     qr.add_data(text)
     qr.make(fit=True)
@@ -227,6 +227,43 @@ def generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, x_offset,
         adjusted_face = [f + current_vertex_offset for f in face]
         faces.append(adjusted_face)
 
+def generate_logo(vertices, faces, logo_path, logo_width, logo_height, protrusion_thickness, xy_offset):
+    # Load the PNG logo
+    logo_img = Image.open(logo_path).convert("L")  # Convert to grayscale
+    logo_img = ImageOps.mirror(logo_img)
+    logo_img = logo_img.rotate(180, expand=True)
+
+    current_size = logo_img.size
+    print(f"current size: {current_size}")
+
+    # Convert image to a binary mask (1 for pixel, 0 for no pixel)
+    logo_array = np.array(logo_img) > 128  # Adjust the threshold if necessary
+
+    # Create a flat plane for the logo based on the image dimensions
+    for y in range(logo_img.height - 1):
+        for x in range(logo_img.width - 1):
+            if logo_array[y, x]:  # If the pixel is part of the logo
+                logo_idx = len(vertices)
+
+                # Scale the pixel positions to fit within the logo_width and logo_height
+                x0 = xy_offset[0] + x * (logo_width / logo_img.width)
+                y0 = xy_offset[1] + y * (logo_height / logo_img.height)
+
+                # Create the vertices for the base and protrusion
+                vertices.extend([
+                    [x0, y0, base_thickness],  # Base level
+                    [x0 + (logo_width / logo_img.width), y0, base_thickness],
+                    [x0 + (logo_width / logo_img.width), y0 + (logo_height / logo_img.height), base_thickness],
+                    [x0, y0 + (logo_height / logo_img.height), base_thickness],
+                    [x0, y0, base_thickness + protrusion_thickness],  # Protruding level
+                    [x0 + (logo_width / logo_img.width), y0, base_thickness + protrusion_thickness],
+                    [x0 + (logo_width / logo_img.width), y0 + (logo_height / logo_img.height), base_thickness + protrusion_thickness],
+                    [x0, y0 + (logo_height / logo_img.height), base_thickness + protrusion_thickness]
+                ])
+
+                # Add the faces (two triangles for each of the base and protrusion faces)
+                add_faces(faces, logo_idx)
+
 def qr_code():
 
     sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
@@ -260,7 +297,7 @@ def qr_code():
         y_scale = desired_size / height
 
         generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, y_offset)
-        generate_outline(vertices, faces, [1,1,1,1], 1, 3, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
+        #generate_outline(vertices, faces, [1,1,1,1], 1, 2, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
 
         #sd_card_x_offset = x_offset + sd_card_height + 10
         #sd_card_y_offset = y_offset + desired_size
@@ -283,19 +320,22 @@ def qr_code():
         text_x_position = (baseplate_y_offset + 3) / text_y_scale
         text_y_position = (baseplate_x_offset + 2) / text_x_scale
         #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+
+        
+        logo_thickness = layer_height * 2
+        #generate_logo(vertices, faces, config.current_directory + "logo.png", 8, 8, logo_thickness, [11.3, 10])
+
         #'''
 
 
         '''
         # For imprinting on silicone mold
-        generate_base(vertices, faces, layer_height * 5, 76, 76, 0, 0)
-        generate_base(vertices, faces, layer_height * 15, 60, 60, 8, 8)
-        generate_outline(vertices, faces, [1,1,1,1], 3, 25, 76, 76, 1, 1, 0, 0)
+        mold_depth = 30
+        mold_wall = 50
+        generate_base(vertices, faces, layer_height * 5, 66, 66, 0, 0)
+        generate_base(vertices, faces, layer_height * mold_depth, 50, 50, 8, 8)
+        generate_outline(vertices, faces, [1,1,1,1], 3, mold_wall, 66, 66, 1, 1, 0, 0)
         #'''
-
-        
-        logo_thickness = layer_height * 5
-        generate_logo(vertices, faces, config.current_directory + "logo.png", 10, 10, logo_thickness, 1.0, 1.0, [20, 20])
 
         current_vertex_offset = len(all_vertices)
         all_vertices.extend(vertices)
@@ -315,39 +355,3 @@ def qr_code():
     qr_mesh.save(rf'{stl_file}')
 
     return round(base_thickness + layer_height, 2)
-
-
-def generate_logo(vertices, faces, logo_path, logo_width, logo_height, protrusion_thickness, x_scale, y_scale, xy_offset):
-    # Load the PNG logo
-    logo_img = Image.open(logo_path).convert("L")  # Convert to grayscale
-    logo_img = ImageOps.mirror(logo_img)
-    logo_img = logo_img.rotate(180, expand=True)
-    logo_img = logo_img.resize((200, 200))  # Resize as needed (adjust as necessary)
-
-    # Convert image to a binary mask (1 for pixel, 0 for no pixel)
-    logo_array = np.array(logo_img) > 128  # Adjust the threshold if necessary
-
-    # Create a flat plane for the logo based on the image dimensions
-    for y in range(logo_img.height - 1):
-        for x in range(logo_img.width - 1):
-            if logo_array[y, x]:  # If the pixel is part of the logo
-                logo_idx = len(vertices)
-
-                # Scale the pixel positions to fit within the logo_width and logo_height
-                x0 = xy_offset[0] + x * (logo_width / logo_img.width) * x_scale
-                y0 = xy_offset[1] + y * (logo_height / logo_img.height) * y_scale
-
-                # Create the vertices for the base and protrusion
-                vertices.extend([
-                    [x0, y0, layer_height * 3],  # Base level
-                    [x0 + (logo_width / logo_img.width) * x_scale, y0, layer_height * 3],
-                    [x0 + (logo_width / logo_img.width) * x_scale, y0 + (logo_height / logo_img.height) * y_scale, layer_height * 3],
-                    [x0, y0 + (logo_height / logo_img.height) * y_scale, layer_height * 3],
-                    [x0, y0, protrusion_thickness],  # Protruding level
-                    [x0 + (logo_width / logo_img.width) * x_scale, y0, protrusion_thickness],
-                    [x0 + (logo_width / logo_img.width) * x_scale, y0 + (logo_height / logo_img.height) * y_scale, protrusion_thickness],
-                    [x0, y0 + (logo_height / logo_img.height) * y_scale, protrusion_thickness]
-                ])
-
-                # Add the faces (two triangles for each of the base and protrusion faces)
-                add_faces(faces, logo_idx)
