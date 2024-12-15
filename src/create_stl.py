@@ -38,7 +38,7 @@ def import_qr_code(text, logo_scale=0.2, circle_radius=5, logo_text="Q"):
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
         box_size=1,  
         border=1
     )
@@ -281,7 +281,7 @@ def qr_code():
         vertices = []
         faces = []
 
-        #'''
+        '''
         qr_code_x_offset = x_offset
         pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
@@ -303,24 +303,24 @@ def qr_code():
         #sd_card_y_offset = y_offset + desired_size
         #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
-        baseplate_width = desired_size
-        baseplate_height = 10
-        baseplate_x_offset = 0
-        baseplate_y_offset = y_offset
+        baseplate_width = 10
+        baseplate_height = 15
+        baseplate_x_offset = 15
+        baseplate_y_offset = desired_size
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
-        #generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
         #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
-        font = "fonts/MinecraftRegular.otf"
+        font = "fonts/8bitoperator_jve.ttf"
         font_size = 16
-        text_x_scale = 1
-        text_y_scale = 1
-        text_x_position = 0 #(baseplate_y_offset + 3) / text_y_scale
-        text_y_position = 0 #(baseplate_x_offset + 2) / text_x_scale
-        text_x_size = desired_size
-        text_y_size = desired_size + 10
+        text_x_scale = .5
+        text_y_scale = .5
+        text_x_position = (baseplate_x_offset + 2.5) / text_x_scale
+        text_y_position = 2 #(baseplate_x_offset + 2) / text_y_scale
+        text_x_size = round((desired_size) / text_x_scale)
+        text_y_size = round((desired_size + baseplate_width) / text_y_scale)
         print(f"({text_x_size}, {text_y_size})")
         generate_text(vertices, faces, text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
@@ -331,13 +331,16 @@ def qr_code():
         #'''
 
 
-        '''
+        #'''
         # For imprinting on silicone mold
-        mold_depth = 30
-        mold_wall = 50
-        generate_base(vertices, faces, layer_height * 5, 66, 66, 0, 0)
-        generate_base(vertices, faces, layer_height * mold_depth, 50, 50, 8, 8)
-        generate_outline(vertices, faces, [1,1,1,1], 3, mold_wall, 66, 66, 1, 1, 0, 0)
+        mold_width = desired_size + 8
+        mold_height = desired_size + 15 + 8
+        mold_depth = 20
+        mold_wall = 40
+        mold_thickness = 16
+        generate_base(vertices, faces, layer_height * 5, mold_width + 16, mold_height + 16, 0, 0)
+        generate_base(vertices, faces, layer_height * mold_depth, mold_width, mold_height, 8, 8)
+        generate_outline(vertices, faces, [1,1,1,1], 3, mold_wall, mold_width + 16, mold_height + 16, 1, 1, 0, 0)
         #'''
 
         current_vertex_offset = len(all_vertices)
