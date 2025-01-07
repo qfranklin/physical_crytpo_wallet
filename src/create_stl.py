@@ -14,6 +14,8 @@ layer_height = 0.12
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 4
 space_between_qrs = 5
+top_text_baseplate_width = 10
+top_text_baseplate_height = 15
 all_vertices = []
 all_faces = []
 
@@ -303,14 +305,12 @@ def qr_code():
         #sd_card_y_offset = y_offset + desired_size
         #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
-        baseplate_width = 10
-        baseplate_height = 15
-        baseplate_x_offset = 15
+        baseplate_x_offset = desired_size - top_text_baseplate_height
         baseplate_y_offset = desired_size
-        baseplate_y_scale = baseplate_width / round(baseplate_width)
-        baseplate_x_scale = baseplate_height / round(baseplate_height)
-        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
-        #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
+        baseplate_y_scale = top_text_baseplate_width / round(top_text_baseplate_width)
+        baseplate_x_scale = top_text_baseplate_height / round(top_text_baseplate_height)
+        generate_base(vertices, faces, base_thickness, top_text_baseplate_width, top_text_baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(top_text_baseplate_width), round(top_text_baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
         font = "fonts/8bitoperator_jve.ttf"
@@ -320,7 +320,7 @@ def qr_code():
         text_x_position = (baseplate_x_offset + 2.5) / text_x_scale
         text_y_position = 0 #(baseplate_x_offset + 2) / text_y_scale
         text_x_size = round((desired_size) / text_x_scale)
-        text_y_size = round((desired_size + baseplate_width) / text_y_scale)
+        text_y_size = round((desired_size + top_text_baseplate_width) / text_y_scale)
         print(f"({text_x_size}, {text_y_size})")
         generate_text(vertices, faces, text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
