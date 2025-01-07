@@ -5,3 +5,4 @@ rear_side_outline.pdf
 *.png
 
 __pycache__/
+.codegpt

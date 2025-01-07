@@ -12,7 +12,7 @@ import config.config as config
 desired_size = 30
 layer_height = 0.12
 protrusion_thickness = layer_height * 2
-base_thickness = layer_height * 2
+base_thickness = layer_height * 4
 space_between_qrs = 5
 all_vertices = []
 all_faces = []
@@ -154,11 +154,11 @@ def generate_outline(vertices, faces, sides, thickness, layers, width, height, x
                 # Add the faces for this outline section
                 add_faces(faces, idx)
 
-def generate_text(vertices, faces, text, font, font_size, x_scale, y_scale, x_offset, y_offset):
+def generate_text(vertices, faces, text, font, font_size, x_size, y_size, x_scale, y_scale, x_offset, y_offset):
     
     font = ImageFont.truetype(config.current_directory + font, font_size)
 
-    text_image = Image.new('L', (700, 700), color=255)
+    text_image = Image.new('L', (x_size, y_size), color=255)
     text_draw = ImageDraw.Draw(text_image)
     text_draw.text((x_offset, y_offset), text, fill=0, font=font)
 
@@ -283,7 +283,7 @@ def qr_code():
 
         #'''
         qr_code_x_offset = x_offset
-        pixels = import_qr_code(qr_code_text)
+        pixels = import_qr_code(qr_code_text, 0.2, 0)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
         font_size = 80
         text_x_scale = .1
@@ -303,38 +303,86 @@ def qr_code():
         #sd_card_y_offset = y_offset + desired_size
         #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
-        baseplate_width = desired_size
-        baseplate_height = 10
-        baseplate_x_offset = 0
-        baseplate_y_offset = y_offset
+        baseplate_width = 10
+        baseplate_height = 15
+        baseplate_x_offset = 15
+        baseplate_y_offset = desired_size
         baseplate_y_scale = baseplate_width / round(baseplate_width)
         baseplate_x_scale = baseplate_height / round(baseplate_height)
-        #generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
+        generate_base(vertices, faces, base_thickness, baseplate_width, baseplate_height, baseplate_x_offset, baseplate_y_offset)
         #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(baseplate_width), round(baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
         text = config.front_top_text[idx]
-        font = "MinecraftBold.otf"
-        font_size = 18
-        text_x_scale = .45
-        text_y_scale = .38
-        text_x_position = (baseplate_y_offset + 3) / text_y_scale
-        text_y_position = (baseplate_x_offset + 2) / text_x_scale
-        #generate_text(vertices, faces, text, font, font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        font = "fonts/8bitoperator_jve.ttf"
+        font_size = 16
+        text_x_scale = .5
+        text_y_scale = .5
+        text_x_position = (baseplate_x_offset + 2.5) / text_x_scale
+        text_y_position = 0 #(baseplate_x_offset + 2) / text_y_scale
+        text_x_size = round((desired_size) / text_x_scale)
+        text_y_size = round((desired_size + baseplate_width) / text_y_scale)
+        print(f"({text_x_size}, {text_y_size})")
+        generate_text(vertices, faces, text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         
         logo_thickness = layer_height * 2
-        #generate_logo(vertices, faces, config.current_directory + "logo.png", 8, 8, logo_thickness, [11.3, 10])
+        #generate_logo(vertices, faces, config.current_directory + "logo.png", 8, 8, logo_thickness, [11, 10])
 
         #'''
 
 
         '''
         # For imprinting on silicone mold
-        mold_depth = 30
-        mold_wall = 50
-        generate_base(vertices, faces, layer_height * 5, 66, 66, 0, 0)
-        generate_base(vertices, faces, layer_height * mold_depth, 50, 50, 8, 8)
-        generate_outline(vertices, faces, [1,1,1,1], 3, mold_wall, 66, 66, 1, 1, 0, 0)
+        epoxy_edge_length = 4
+        price_tag_width = 15
+        price_tag_height = 10
+        
+        mold_width = desired_size + (epoxy_edge_length * 2)
+        mold_height = desired_size + price_tag_width + (epoxy_edge_length * 2)
+        mold_x_offset = epoxy_edge_length * 2
+        mold_y_offset = epoxy_edge_length * 2
+
+        # Create 4 squares for the loop
+        mold1_width = desired_size + (epoxy_edge_length * 2)
+        mold1_height = desired_size + (epoxy_edge_length * 2) + 1
+
+        mold2_width = 5
+        mold2_height = 10
+        mold2_x_offset = mold1_height + mold_x_offset
+        mold2_y_offset = mold_y_offset + mold1_width - mold2_width
+
+        mold4_width = price_tag_width + (epoxy_edge_length * 2)
+        mold4_height = mold2_height
+
+        mold3_width = mold1_width - (mold2_width + mold4_width)
+        mold3_height = 5
+        mold3_x_offset = mold2_x_offset + mold2_height - mold3_height
+        mold3_y_offset = mold_y_offset + mold_width - mold3_width - mold2_width
+
+        mold4_x_offset = mold2_x_offset
+        mold4_y_offset = mold_y_offset
+
+        mold_base_width = mold_width + (epoxy_edge_length * 4)
+        mold_base_height = mold_height + (epoxy_edge_length * 4)
+        
+        mold_depth = 40
+        mold_wall = 60
+        mold_thickness = 16
+
+        print(f"current size: {mold1_height + mold2_height}")
+
+
+        # Base
+        generate_base(vertices, faces, layer_height * 5, mold_base_width, mold_base_height, 0, 0)
+        
+        # Imprent2
+        generate_base(vertices, faces, layer_height * mold_depth, mold1_width, mold1_height, mold_x_offset, mold_y_offset)
+        generate_base(vertices, faces, layer_height * mold_depth, mold2_width, mold2_height, mold2_x_offset, mold2_y_offset)
+        generate_base(vertices, faces, layer_height * mold_depth, mold3_width, mold3_height, mold3_x_offset, mold3_y_offset)
+        generate_base(vertices, faces, layer_height * mold_depth, mold4_width, mold4_height, mold4_x_offset, mold4_y_offset)
+        
+        # Outer wall
+        generate_outline(vertices, faces, [1,1,1,1], 3, mold_wall, mold_base_width, mold_base_height, 1, 1, 0, 0)
         #'''
 
         current_vertex_offset = len(all_vertices)
