@@ -9,13 +9,13 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 30
+desired_size = 40
 layer_height = 0.12
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 4
 space_between_qrs = 5
-top_text_baseplate_width = 10
-top_text_baseplate_height = 15
+top_text_baseplate_width = desired_size / 3
+top_text_baseplate_height = desired_size / 2
 all_vertices = []
 all_faces = []
 
