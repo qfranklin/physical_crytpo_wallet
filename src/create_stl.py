@@ -12,7 +12,7 @@ import config.config as config
 desired_size = 30
 layer_height = 0.12
 protrusion_thickness = layer_height * 2
-base_thickness = layer_height * 2
+base_thickness = layer_height * 4
 space_between_qrs = 5
 all_vertices = []
 all_faces = []
@@ -38,7 +38,7 @@ def import_qr_code(text, logo_scale=0.2, circle_radius=5, logo_text="Q"):
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=1,  
         border=1
     )
@@ -281,9 +281,9 @@ def qr_code():
         vertices = []
         faces = []
 
-        '''
+        #'''
         qr_code_x_offset = x_offset
-        pixels = import_qr_code(qr_code_text)
+        pixels = import_qr_code(qr_code_text, 0.2, 0)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
         font_size = 80
         text_x_scale = .1
@@ -318,7 +318,7 @@ def qr_code():
         text_x_scale = .5
         text_y_scale = .5
         text_x_position = (baseplate_x_offset + 2.5) / text_x_scale
-        text_y_position = 2 #(baseplate_x_offset + 2) / text_y_scale
+        text_y_position = 0 #(baseplate_x_offset + 2) / text_y_scale
         text_x_size = round((desired_size) / text_x_scale)
         text_y_size = round((desired_size + baseplate_width) / text_y_scale)
         print(f"({text_x_size}, {text_y_size})")
@@ -326,12 +326,12 @@ def qr_code():
 
         
         logo_thickness = layer_height * 2
-        #generate_logo(vertices, faces, config.current_directory + "logo.png", 8, 8, logo_thickness, [11.3, 10])
+        #generate_logo(vertices, faces, config.current_directory + "logo.png", 8, 8, logo_thickness, [11, 10])
 
         #'''
 
 
-        #'''
+        '''
         # For imprinting on silicone mold
         epoxy_edge_length = 4
         price_tag_width = 15
@@ -349,7 +349,7 @@ def qr_code():
         mold2_width = 5
         mold2_height = 10
         mold2_x_offset = mold1_height + mold_x_offset
-        mold2_y_offset = mold_y_offset
+        mold2_y_offset = mold_y_offset + mold1_width - mold2_width
 
         mold4_width = price_tag_width + (epoxy_edge_length * 2)
         mold4_height = mold2_height
@@ -357,16 +357,16 @@ def qr_code():
         mold3_width = mold1_width - (mold2_width + mold4_width)
         mold3_height = 5
         mold3_x_offset = mold2_x_offset + mold2_height - mold3_height
-        mold3_y_offset = mold2_y_offset + mold2_width
+        mold3_y_offset = mold_y_offset + mold_width - mold3_width - mold2_width
 
         mold4_x_offset = mold2_x_offset
-        mold4_y_offset = mold2_width + mold3_width + mold2_y_offset
+        mold4_y_offset = mold_y_offset
 
         mold_base_width = mold_width + (epoxy_edge_length * 4)
         mold_base_height = mold_height + (epoxy_edge_length * 4)
         
-        mold_depth = 20
-        mold_wall = 40
+        mold_depth = 40
+        mold_wall = 60
         mold_thickness = 16
 
         print(f"current size: {mold1_height + mold2_height}")
