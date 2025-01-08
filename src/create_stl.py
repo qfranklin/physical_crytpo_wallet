@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 40
+desired_size = 45
 layer_height = 0.12
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 4
@@ -312,17 +312,17 @@ def qr_code():
         generate_base(vertices, faces, base_thickness, top_text_baseplate_width, top_text_baseplate_height, baseplate_x_offset, baseplate_y_offset)
         #generate_outline(vertices, faces, [1,1,0,1], 1, 3, round(top_text_baseplate_width), round(top_text_baseplate_height), baseplate_x_scale, baseplate_y_scale, baseplate_x_offset, baseplate_y_offset)
 
-        text = config.front_top_text[idx]
+        top_text = config.front_top_text[idx]
         font = "fonts/8bitoperator_jve.ttf"
         font_size = 16
-        text_x_scale = .5
-        text_y_scale = .5
-        text_x_position = (baseplate_x_offset + 2.5) / text_x_scale
+        text_x_scale = desired_size / 55
+        text_y_scale = desired_size / 60
+        text_x_position = (baseplate_x_offset + 3) / text_x_scale
         text_y_position = 0 #(baseplate_x_offset + 2) / text_y_scale
         text_x_size = round((desired_size) / text_x_scale)
         text_y_size = round((desired_size + top_text_baseplate_width) / text_y_scale)
         print(f"({text_x_size}, {text_y_size})")
-        generate_text(vertices, faces, text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        generate_text(vertices, faces, top_text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
 
         
         logo_thickness = layer_height * 2
