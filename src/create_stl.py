@@ -336,6 +336,8 @@ def qr_code():
         #'''
         # For imprinting on silicone mold
         epoxy_edge_length = 4
+
+        qr_code_face_side = True
         
         mold_width = desired_size + (epoxy_edge_length * 2)
         mold_height = desired_size + price_tag_width + epoxy_edge_length
@@ -346,39 +348,55 @@ def qr_code():
         qrcode_mold_with = desired_size + (epoxy_edge_length * 2)
         qrcode_mold_height = desired_size + (epoxy_edge_length * 2) + 1
 
-        mold2_width = desired_size / 6
-        mold2_height = desired_size / 3
-        mold2_x_offset = qrcode_mold_height + mold_x_offset
-        mold2_y_offset = mold_y_offset + qrcode_mold_with - mold2_width
+        outer_side_mold_width = desired_size / 6
+        outer_side_mold_height = desired_size / 3
+
+        if(qr_code_face_side):
+            outer_side_mold_x_offset = qrcode_mold_height + mold_x_offset
+        else:
+            outer_side_mold_x_offset = qrcode_mold_height + mold_x_offset
+
+        if(qr_code_face_side):
+            outer_side_mold_y_offset = mold_y_offset
+        else:  
+            outer_side_mold_y_offset = mold_y_offset + qrcode_mold_with - outer_side_mold_width
 
         mold4_width = price_tag_width + (epoxy_edge_length * 2)
-        mold4_height = mold2_height
+        mold4_height = outer_side_mold_height
 
-        mold3_width = qrcode_mold_with - (mold2_width + mold4_width)
+        mold3_width = qrcode_mold_with - (outer_side_mold_width + mold4_width)
         mold3_height = desired_size / 6
-        mold3_x_offset = mold2_x_offset + mold2_height - mold3_height
-        mold3_y_offset = mold_y_offset + mold_width - mold3_width - mold2_width
+        mold3_x_offset = outer_side_mold_x_offset + outer_side_mold_height - mold3_height
+        mold3_y_offset = mold_y_offset + mold_width - mold3_width - outer_side_mold_width
 
-        mold4_x_offset = mold2_x_offset
+        mold4_x_offset = outer_side_mold_x_offset
         mold4_y_offset = mold_y_offset
 
         mold_base_width = round(mold_width + (epoxy_edge_length * 4))
         mold_base_height = round(mold_height + (epoxy_edge_length * 4))
         
-        mold_depth = 40
-        mold_wall = 60
+        if(qr_code_face_side):
+            mold_depth = 20
+        else:
+            mold_depth = 40
+
+        if(qr_code_face_side):
+            mold_wall = 40
+        else:
+            mold_wall = 60
+
         mold_thickness = 16
 
-        print(f"current size: {qrcode_mold_height + mold2_height}")
+        print(f"current size: {qrcode_mold_height + outer_side_mold_height}")
 
 
         # Base
         generate_base(vertices, faces, layer_height * 5, mold_base_width, mold_base_height, 0, 0)
         
         # Imprent2
-        generate_base(vertices, faces, layer_height * mold_depth, mold2_width, mold2_height, mold2_x_offset, mold2_y_offset)
-        generate_base(vertices, faces, layer_height * mold_depth, mold3_width, mold3_height, mold3_x_offset, mold3_y_offset)
-        generate_base(vertices, faces, layer_height * mold_depth, mold4_width, mold4_height, mold4_x_offset, mold4_y_offset)
+        generate_base(vertices, faces, layer_height * mold_depth, outer_side_mold_width, outer_side_mold_height, outer_side_mold_x_offset, outer_side_mold_y_offset)
+        #generate_base(vertices, faces, layer_height * mold_depth, mold3_width, mold3_height, mold3_x_offset, mold3_y_offset)
+        #generate_base(vertices, faces, layer_height * mold_depth, mold4_width, mold4_height, mold4_x_offset, mold4_y_offset)
         
         # QR Code Mold
         generate_base(vertices, faces, layer_height * mold_depth, qrcode_mold_with, qrcode_mold_height, mold_x_offset, mold_y_offset)
