@@ -337,7 +337,7 @@ def qr_code():
         # For imprinting on silicone mold
         epoxy_edge_length = 4
 
-        qr_code_face_side = True
+        qr_code_face_side = False
         
         mold_width = desired_size + (epoxy_edge_length * 2)
         mold_height = desired_size + price_tag_width + epoxy_edge_length
@@ -358,10 +358,7 @@ def qr_code():
         else:  
             outer_side_mold_y_offset = mold_y_offset + qrcode_mold_with - outer_side_mold_width
 
-        mold4_width = price_tag_width + (epoxy_edge_length * 2)
-        mold4_height = outer_side_mold_height
-
-        upper_side_mold_width = qrcode_mold_with - (outer_side_mold_width + mold4_width)
+        upper_side_mold_width = qrcode_mold_with - (outer_side_mold_width + price_tag_width + (epoxy_edge_length * 2))
         upper_side_mold_height = desired_size / 6
         upper_side_x_offset = outer_side_mold_x_offset + outer_side_mold_height - upper_side_mold_height
         
@@ -370,8 +367,14 @@ def qr_code():
         else:
             upper_side_y_offset = mold_y_offset + mold_width - upper_side_mold_width - outer_side_mold_width
 
-        mold4_x_offset = outer_side_mold_x_offset
-        mold4_y_offset = mold_y_offset
+        block_mold_width = price_tag_width + (epoxy_edge_length * 2)
+        block_mold_height = desired_size / 3
+        block_mold_x_offset = outer_side_mold_x_offset
+
+        if(qr_code_face_side):
+            block_mold_y_offset = upper_side_y_offset + upper_side_mold_width
+        else:
+            block_mold_y_offset = mold_y_offset
 
         mold_base_width = round(mold_width + (epoxy_edge_length * 4))
         mold_base_height = round(mold_height + (epoxy_edge_length * 4))
@@ -386,8 +389,6 @@ def qr_code():
         else:
             mold_wall = 60
 
-        mold_thickness = 16
-
         print(f"current size: {qrcode_mold_height + outer_side_mold_height}")
 
 
@@ -397,7 +398,7 @@ def qr_code():
         # Imprent2
         generate_base(vertices, faces, layer_height * mold_depth, outer_side_mold_width, outer_side_mold_height, outer_side_mold_x_offset, outer_side_mold_y_offset)
         generate_base(vertices, faces, layer_height * mold_depth, upper_side_mold_width, upper_side_mold_height, upper_side_x_offset, upper_side_y_offset)
-        #generate_base(vertices, faces, layer_height * mold_depth, mold4_width, mold4_height, mold4_x_offset, mold4_y_offset)
+        generate_base(vertices, faces, layer_height * mold_depth, block_mold_width, block_mold_height, block_mold_x_offset, block_mold_y_offset)
         
         # QR Code Mold
         generate_base(vertices, faces, layer_height * mold_depth, qrcode_mold_with, qrcode_mold_height, mold_x_offset, mold_y_offset)
