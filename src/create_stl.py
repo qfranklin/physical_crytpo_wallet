@@ -9,13 +9,15 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 45
+desired_size = 30
 layer_height = 0.12
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 4
 space_between_qrs = 5
 top_text_baseplate_width = desired_size / 3
 top_text_baseplate_height = desired_size / 2
+price_tag_width = top_text_baseplate_height
+price_tag_height = top_text_baseplate_width
 all_vertices = []
 all_faces = []
 
@@ -283,7 +285,7 @@ def qr_code():
         vertices = []
         faces = []
 
-        #'''
+        '''
         qr_code_x_offset = x_offset
         pixels = import_qr_code(qr_code_text, 0.2, 0)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
@@ -317,7 +319,7 @@ def qr_code():
         font_size = 16
         text_x_scale = desired_size / 55
         text_y_scale = desired_size / 60
-        text_x_position = (baseplate_x_offset + 3) / text_x_scale
+        text_x_position = (baseplate_x_offset + 2.5) / text_x_scale
         text_y_position = 0 #(baseplate_x_offset + 2) / text_y_scale
         text_x_size = round((desired_size) / text_x_scale)
         text_y_size = round((desired_size + top_text_baseplate_width) / text_y_scale)
@@ -331,14 +333,12 @@ def qr_code():
         #'''
 
 
-        '''
+        #'''
         # For imprinting on silicone mold
         epoxy_edge_length = 4
-        price_tag_width = 15
-        price_tag_height = 10
         
         mold_width = desired_size + (epoxy_edge_length * 2)
-        mold_height = desired_size + price_tag_width + (epoxy_edge_length * 2)
+        mold_height = desired_size + price_tag_width + epoxy_edge_length
         mold_x_offset = epoxy_edge_length * 2
         mold_y_offset = epoxy_edge_length * 2
 
@@ -362,8 +362,8 @@ def qr_code():
         mold4_x_offset = mold2_x_offset
         mold4_y_offset = mold_y_offset
 
-        mold_base_width = mold_width + (epoxy_edge_length * 4)
-        mold_base_height = mold_height + (epoxy_edge_length * 4)
+        mold_base_width = round(mold_width + (epoxy_edge_length * 4))
+        mold_base_height = round(mold_height + (epoxy_edge_length * 4))
         
         mold_depth = 40
         mold_wall = 60
