@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 30
+desired_size = 40
 layer_height = 0.12
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 4
@@ -343,19 +343,19 @@ def qr_code():
         mold_y_offset = epoxy_edge_length * 2
 
         # Create 4 squares for the loop
-        mold1_width = desired_size + (epoxy_edge_length * 2)
-        mold1_height = desired_size + (epoxy_edge_length * 2) + 1
+        qrcode_mold_with = desired_size + (epoxy_edge_length * 2)
+        qrcode_mold_height = desired_size + (epoxy_edge_length * 2) + 1
 
-        mold2_width = 5
-        mold2_height = 10
-        mold2_x_offset = mold1_height + mold_x_offset
-        mold2_y_offset = mold_y_offset + mold1_width - mold2_width
+        mold2_width = desired_size / 6
+        mold2_height = desired_size / 3
+        mold2_x_offset = qrcode_mold_height + mold_x_offset
+        mold2_y_offset = mold_y_offset + qrcode_mold_with - mold2_width
 
         mold4_width = price_tag_width + (epoxy_edge_length * 2)
         mold4_height = mold2_height
 
-        mold3_width = mold1_width - (mold2_width + mold4_width)
-        mold3_height = 5
+        mold3_width = qrcode_mold_with - (mold2_width + mold4_width)
+        mold3_height = desired_size / 6
         mold3_x_offset = mold2_x_offset + mold2_height - mold3_height
         mold3_y_offset = mold_y_offset + mold_width - mold3_width - mold2_width
 
@@ -369,18 +369,21 @@ def qr_code():
         mold_wall = 60
         mold_thickness = 16
 
-        print(f"current size: {mold1_height + mold2_height}")
+        print(f"current size: {qrcode_mold_height + mold2_height}")
 
 
         # Base
         generate_base(vertices, faces, layer_height * 5, mold_base_width, mold_base_height, 0, 0)
         
         # Imprent2
-        generate_base(vertices, faces, layer_height * mold_depth, mold1_width, mold1_height, mold_x_offset, mold_y_offset)
         generate_base(vertices, faces, layer_height * mold_depth, mold2_width, mold2_height, mold2_x_offset, mold2_y_offset)
         generate_base(vertices, faces, layer_height * mold_depth, mold3_width, mold3_height, mold3_x_offset, mold3_y_offset)
         generate_base(vertices, faces, layer_height * mold_depth, mold4_width, mold4_height, mold4_x_offset, mold4_y_offset)
         
+        # QR Code Mold
+        generate_base(vertices, faces, layer_height * mold_depth, qrcode_mold_with, qrcode_mold_height, mold_x_offset, mold_y_offset)
+
+
         # Outer wall
         generate_outline(vertices, faces, [1,1,1,1], 3, mold_wall, mold_base_width, mold_base_height, 1, 1, 0, 0)
         #'''
