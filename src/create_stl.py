@@ -42,7 +42,7 @@ def import_qr_code(text, logo_scale=0.2, circle_radius=5, logo_text="Q"):
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
         box_size=1,  
         border=1
     )
@@ -285,9 +285,9 @@ def qr_code():
         vertices = []
         faces = []
 
-        '''
+        #'''
         qr_code_x_offset = x_offset
-        pixels = import_qr_code(qr_code_text, 0.2, 0)
+        pixels = import_qr_code(qr_code_text)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
         font_size = 80
         text_x_scale = .1
@@ -307,8 +307,8 @@ def qr_code():
         #sd_card_y_offset = y_offset + desired_size
         #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
-        baseplate_x_offset = desired_size - top_text_baseplate_height
-        baseplate_y_offset = desired_size
+        baseplate_x_offset = qr_code_x_offset + desired_size - top_text_baseplate_height
+        baseplate_y_offset = y_offset + desired_size
         baseplate_y_scale = top_text_baseplate_width / round(top_text_baseplate_width)
         baseplate_x_scale = top_text_baseplate_height / round(top_text_baseplate_height)
         generate_base(vertices, faces, base_thickness, top_text_baseplate_width, top_text_baseplate_height, baseplate_x_offset, baseplate_y_offset)
@@ -333,7 +333,7 @@ def qr_code():
         #'''
 
 
-        #'''
+        '''
         # For imprinting on silicone mold
         epoxy_edge_length = 4
 
