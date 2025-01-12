@@ -16,8 +16,6 @@ base_thickness = layer_height * 4
 space_between_qrs = 5
 top_text_baseplate_width = desired_size / 3
 top_text_baseplate_height = desired_size / 2
-price_tag_width = top_text_baseplate_height
-price_tag_height = top_text_baseplate_width
 all_vertices = []
 all_faces = []
 
@@ -280,7 +278,7 @@ def qr_code():
         col = idx // grid_size
         row = idx % grid_size
         x_offset = col * (desired_size + sd_card_height + (space_between_qrs * idx))
-        y_offset = row * (desired_size + (space_between_qrs * idx))
+        y_offset = row * (desired_size + (space_between_qrs * idx) + top_text_baseplate_height)
 
         vertices = []
         faces = []
@@ -340,7 +338,7 @@ def qr_code():
         qr_code_face_side = False
         
         mold_width = desired_size + (epoxy_edge_length * 2)
-        mold_height = desired_size + price_tag_width + epoxy_edge_length
+        mold_height = desired_size + top_text_baseplate_height + epoxy_edge_length
         mold_x_offset = epoxy_edge_length * 2
         mold_y_offset = epoxy_edge_length * 2
 
@@ -358,7 +356,7 @@ def qr_code():
         else:  
             outer_side_mold_y_offset = mold_y_offset + qrcode_mold_with - outer_side_mold_width
 
-        upper_side_mold_width = qrcode_mold_with - (outer_side_mold_width + price_tag_width + (epoxy_edge_length * 2))
+        upper_side_mold_width = qrcode_mold_with - (outer_side_mold_width + top_text_baseplate_height + (epoxy_edge_length * 2))
         upper_side_mold_height = desired_size / 6
         upper_side_x_offset = outer_side_mold_x_offset + outer_side_mold_height - upper_side_mold_height
         
@@ -367,7 +365,7 @@ def qr_code():
         else:
             upper_side_y_offset = mold_y_offset + mold_width - upper_side_mold_width - outer_side_mold_width
 
-        block_mold_width = price_tag_width + (epoxy_edge_length * 2)
+        block_mold_width = top_text_baseplate_height + (epoxy_edge_length * 2)
         block_mold_height = desired_size / 3
         block_mold_x_offset = outer_side_mold_x_offset
 
