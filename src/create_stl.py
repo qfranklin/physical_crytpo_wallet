@@ -277,16 +277,15 @@ def qr_code():
         
         col = idx // grid_size
         row = idx % grid_size
-        x_offset = col * (desired_size + sd_card_height + (space_between_qrs * idx))
-        y_offset = row * (desired_size + (space_between_qrs * idx) + top_text_baseplate_height)
+        qr_code_x_offset = col * (desired_size + sd_card_height + (space_between_qrs * idx))
+        qr_code_y_offset = row * (desired_size + (space_between_qrs * idx) + top_text_baseplate_height)
 
         vertices = []
         faces = []
 
         #'''
-        qr_code_x_offset = x_offset
         pixels = import_qr_code(qr_code_text)
-        generate_qr_code(vertices, faces, pixels, qr_code_x_offset, y_offset)
+        generate_qr_code(vertices, faces, pixels, qr_code_x_offset, qr_code_y_offset)
         font_size = 80
         text_x_scale = .1
         text_y_scale = .1
@@ -298,15 +297,15 @@ def qr_code():
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, y_offset)
-        #generate_outline(vertices, faces, [1,1,1,1], 1, 2, width, height, x_scale, y_scale, qr_code_x_offset, y_offset)
+        generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, qr_code_y_offset)
+        #generate_outline(vertices, faces, [1,1,1,1], 1, 2, width, height, x_scale, y_scale, qr_code_x_offset, qr_code_y_offset)
 
-        #sd_card_x_offset = x_offset + sd_card_height + 10
-        #sd_card_y_offset = y_offset + desired_size
+        #sd_card_x_offset = qr_code_x_offset + sd_card_height + 10
+        #sd_card_y_offset = qr_code_y_offset + desired_size
         #generate_sd_card(vertices, faces, sd_card_vertices, sd_card_faces, sd_card_x_offset, sd_card_y_offset)
 
         baseplate_x_offset = qr_code_x_offset + desired_size - top_text_baseplate_height
-        baseplate_y_offset = y_offset + desired_size
+        baseplate_y_offset = qr_code_y_offset + desired_size
         baseplate_y_scale = top_text_baseplate_width / round(top_text_baseplate_width)
         baseplate_x_scale = top_text_baseplate_height / round(top_text_baseplate_height)
         generate_base(vertices, faces, base_thickness, top_text_baseplate_width, top_text_baseplate_height, baseplate_x_offset, baseplate_y_offset)
