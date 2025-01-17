@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 import config.config as config
 
 # These variables are in milimeters
-desired_size = 40
+desired_size = 30
 layer_height = 0.12
 protrusion_thickness = layer_height * 2
 base_thickness = layer_height * 4
@@ -36,7 +36,7 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
-def import_qr_code(text, logo_scale=0.2, circle_radius=5, logo_text="Q"):
+def import_qr_code(text, logo_scale=0.2, circle_radius=3, logo_text="Q"):
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
@@ -162,7 +162,9 @@ def generate_text(vertices, faces, text, font, font_size, x_size, y_size, x_scal
 
     text_image = Image.new('L', (x_size, y_size), color=255)
     text_draw = ImageDraw.Draw(text_image)
-    text_draw.text((x_offset, y_offset), text, fill=0, font=font)
+    print(f"generate text offsets {y_offset}")
+    print(f"generate text size {y_size}")
+    text_draw.text((0, 0), text, fill=0, font=font)
 
     text_image = ImageOps.mirror(text_image)
     text_image = text_image.rotate(180, expand=True)
@@ -175,14 +177,14 @@ def generate_text(vertices, faces, text, font, font_size, x_size, y_size, x_scal
                 text_idx = len(vertices)
 
                 vertices.extend([
-                    [x * x_scale, y * y_scale, base_thickness],
-                    [(x + 1) * x_scale, y * y_scale, base_thickness],
-                    [(x + 1) * x_scale, (y + 1) * y_scale, base_thickness],
-                    [x * x_scale, (y + 1) * y_scale, base_thickness],
-                    [x * x_scale, y * y_scale, base_thickness + protrusion_thickness],
-                    [(x + 1) * x_scale, y * y_scale, base_thickness + protrusion_thickness],
-                    [(x + 1) * x_scale, (y + 1) * y_scale, base_thickness + protrusion_thickness],
-                    [x * x_scale, (y + 1) * y_scale, base_thickness + protrusion_thickness]
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness],
+                    [x * x_scale + x_offset, y * y_scale + y_offset, base_thickness + protrusion_thickness],
+                    [(x + 1) * x_scale + x_offset, y * y_scale + y_offset, base_thickness + protrusion_thickness],
+                    [(x + 1) * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + protrusion_thickness],
+                    [x * x_scale + x_offset, (y + 1) * y_scale + y_offset, base_thickness + protrusion_thickness]
                 ])
 
                 add_faces(faces, text_idx)
@@ -285,19 +287,13 @@ def qr_code():
 
         #'''
         pixels = import_qr_code(qr_code_text)
-        generate_qr_code(vertices, faces, pixels, qr_code_x_offset, qr_code_y_offset)
-        font_size = 80
-        text_x_scale = .1
-        text_y_scale = .1
-        text_x_position = (22.5) / text_y_scale
-        text_y_position = (40) / text_x_scale
-        #generate_text(vertices, faces, "Q", "SuperMagic.ttf", font_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        #generate_qr_code(vertices, faces, pixels, qr_code_x_offset, qr_code_y_offset)
 
         height, width = pixels.shape
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, qr_code_y_offset)
+        #generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, qr_code_y_offset)
         #generate_outline(vertices, faces, [1,1,1,1], 1, 2, width, height, x_scale, y_scale, qr_code_x_offset, qr_code_y_offset)
 
         #sd_card_x_offset = qr_code_x_offset + sd_card_height + 10
@@ -316,16 +312,25 @@ def qr_code():
         font_size = 16
         text_x_scale = desired_size / 55
         text_y_scale = desired_size / 60
-        text_x_position = (baseplate_x_offset + 2.5) / text_x_scale
-        text_y_position = 0 #(baseplate_x_offset + 2) / text_y_scale
-        text_x_size = round((desired_size) / text_x_scale)
-        text_y_size = round((desired_size + top_text_baseplate_width) / text_y_scale)
-        print(f"({text_x_size}, {text_y_size})")
-        generate_text(vertices, faces, top_text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_position, text_y_position)
+        text_x_offset = baseplate_x_offset + 2
+        text_y_offset = baseplate_y_offset
+        text_x_size = round(top_text_baseplate_height / text_x_scale)
+        text_y_size = round(top_text_baseplate_width / text_y_scale)
 
+        print(f"x: {qr_code_x_offset}")
+        print(f"text y offset: {text_y_offset}")
+        print(f"baseplate y offset: {baseplate_y_offset} {row}")
+        print(f"y scale: {text_y_scale}")
+        print(f"text y size: {text_y_size}")
+        print(f"text x size: {text_x_size}")
+        print(f"top_text_baseplate_width: {top_text_baseplate_width}")
+        print(f"top_text_baseplate_height: {top_text_baseplate_height}")
+
+        generate_text(vertices, faces, top_text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_offset, text_y_offset)
+        print("\n")
         
         logo_thickness = layer_height * 2
-        #generate_logo(vertices, faces, config.current_directory + "logo.png", 8, 8, logo_thickness, [11, 10])
+        #generate_logo(vertices, faces, config.current_directory + "logo.png", 5, 5, logo_thickness, [12.5, 11.5])
 
         #'''
 
