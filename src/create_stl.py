@@ -270,7 +270,7 @@ def generate_logo(vertices, faces, logo_path, logo_width, logo_height, protrusio
 
 def qr_code():
 
-    sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
+    #sd_card_vertices, sd_card_faces, sd_card_height, sd_card_width = import_sd_card()
 
     total_qr_codes = len(config.qr_code_text_array)
     grid_size = math.ceil(math.sqrt(total_qr_codes))
@@ -279,21 +279,21 @@ def qr_code():
         
         col = idx // grid_size
         row = idx % grid_size
-        qr_code_x_offset = col * (desired_size + sd_card_height + (space_between_qrs * idx))
-        qr_code_y_offset = row * (desired_size + (space_between_qrs * idx) + top_text_baseplate_height)
+        qr_code_x_offset = col * (desired_size + space_between_qrs)
+        qr_code_y_offset = row * (desired_size + top_text_baseplate_height)
 
         vertices = []
         faces = []
 
         #'''
         pixels = import_qr_code(qr_code_text)
-        #generate_qr_code(vertices, faces, pixels, qr_code_x_offset, qr_code_y_offset)
+        generate_qr_code(vertices, faces, pixels, qr_code_x_offset, qr_code_y_offset)
 
         height, width = pixels.shape
         x_scale = desired_size / width
         y_scale = desired_size / height
 
-        #generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, qr_code_y_offset)
+        generate_base(vertices, faces, base_thickness, desired_size, desired_size, qr_code_x_offset, qr_code_y_offset)
         #generate_outline(vertices, faces, [1,1,1,1], 1, 2, width, height, x_scale, y_scale, qr_code_x_offset, qr_code_y_offset)
 
         #sd_card_x_offset = qr_code_x_offset + sd_card_height + 10
@@ -316,15 +316,6 @@ def qr_code():
         text_y_offset = baseplate_y_offset
         text_x_size = round(top_text_baseplate_height / text_x_scale)
         text_y_size = round(top_text_baseplate_width / text_y_scale)
-
-        print(f"x: {qr_code_x_offset}")
-        print(f"text y offset: {text_y_offset}")
-        print(f"baseplate y offset: {baseplate_y_offset} {row}")
-        print(f"y scale: {text_y_scale}")
-        print(f"text y size: {text_y_size}")
-        print(f"text x size: {text_x_size}")
-        print(f"top_text_baseplate_width: {top_text_baseplate_width}")
-        print(f"top_text_baseplate_height: {top_text_baseplate_height}")
 
         generate_text(vertices, faces, top_text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_offset, text_y_offset)
         print("\n")
