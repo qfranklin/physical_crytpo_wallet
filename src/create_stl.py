@@ -321,7 +321,8 @@ def qr_code():
         print("\n")
         
         logo_thickness = layer_height * 2
-        generate_logo(vertices, faces, config.current_directory + "q_pyramid_logo.png", 5, 5, logo_thickness, [12.5, 12.5])
+        logo_offset = [qr_code_x_offset + 12.5, qr_code_y_offset + 12.5]
+        generate_logo(vertices, faces, config.current_directory + "q_pyramid_logo.png", 5, 5, logo_thickness, logo_offset)
 
         #'''
 
