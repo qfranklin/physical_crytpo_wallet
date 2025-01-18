@@ -16,6 +16,7 @@ base_thickness = layer_height * 4
 space_between_qrs = 5
 top_text_baseplate_width = desired_size / 3
 top_text_baseplate_height = desired_size / 2
+add_logo = False
 all_vertices = []
 all_faces = []
 
@@ -36,11 +37,18 @@ def add_faces(faces, start_idx):
         [start_idx + 3, start_idx, start_idx + 4], [start_idx + 3, start_idx + 4, start_idx + 7]  # Side face
     ])
 
-def import_qr_code(text, logo_scale=0.2, circle_radius=3, logo_text="Q"):
+def import_qr_code(text, circle_radius):
+
+    # Add error correction if there is a logo
+    if add_logo:
+        error_correction = qrcode.constants.ERROR_CORRECT_M 
+    else: 
+        error_correction = qrcode.constants.ERROR_CORRECT_L
+
     # Generate QR Code
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        error_correction=error_correction,
         box_size=1,  
         border=1
     )
@@ -286,7 +294,11 @@ def qr_code():
         faces = []
 
         #'''
-        pixels = import_qr_code(qr_code_text)
+        if add_logo:
+            circle_radius = 5
+        else:
+            circle_radius = 0
+        pixels = import_qr_code(qr_code_text, circle_radius)
         generate_qr_code(vertices, faces, pixels, qr_code_x_offset, qr_code_y_offset)
 
         height, width = pixels.shape
@@ -320,9 +332,10 @@ def qr_code():
         generate_text(vertices, faces, top_text, font, font_size, text_x_size, text_y_size, text_x_scale, text_y_scale, text_x_offset, text_y_offset)
         print("\n")
         
-        logo_thickness = layer_height * 2
-        logo_offset = [qr_code_x_offset + 12.5, qr_code_y_offset + 12.5]
-        generate_logo(vertices, faces, config.current_directory + "q_pyramid_logo.png", 5, 5, logo_thickness, logo_offset)
+        if add_logo:
+            logo_thickness = layer_height * 2
+            logo_offset = [qr_code_x_offset + 12.5, qr_code_y_offset + 12.5]
+            generate_logo(vertices, faces, config.current_directory + "q_pyramid_logo.png", 5, 5, logo_thickness, logo_offset)
 
         #'''
 
